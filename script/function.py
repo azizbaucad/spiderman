@@ -57,6 +57,25 @@ def create_table_inventaire():
             con.close()
             print("Connection on Postgresql database is disconnected")
 
+# function de decodage du token avec JWT
+def decodeToken(token):
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return {"data": decoded, 'code': HTTPStatus.ok}
+    except:
+        return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+# function getRoleToken pour l'attribution des roles
+def getRoleToken(token):
+    try:
+        roles = decodeToken(token)['data']['realm_access']['roles']
+        for role in roles:
+            if (role != 'offline-access' and role != 'uma_authorization'):
+                return role
+
+    except ValueError:
+        return {'status': 'Error', 'error': ValueError}
+
 
 
 

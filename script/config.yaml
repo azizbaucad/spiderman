@@ -8,3 +8,16 @@ USER_DB: souxateuserprod
 PASSWORD_DB: S0ux@t3Pr0d2021
 HOST_DB: 10.137.15.70
 PORT_DB: 5432
+
+#INTEGRATION DE KEYCLOACK
+REALM: saytu
+CLIENT_ID: saytu_test
+CLIENT_SECRET: 60946059-eb99-4f82-a8e7-6dcba0d6345d
+#GRANT_TYPE: client_credentials
+KEYCLOAK_URI: "http://localhost:8080/auth/"
+OPENID_URL: "http://localhost:8080/auth/realms/saytu/protocol/openid-connect"
+URI_USER: "http://localhost:8080/auth/admin/realms/saytu/users"
+URI_ROLES: "http://localhost:8080/auth/admin/realms/saytu/roles"
+ADMIN_USER: admin
+ADMIN_PASS: admin
+
