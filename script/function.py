@@ -70,7 +70,7 @@ def getRoleToken(token):
     try:
         roles = decodeToken(token)['data']['realm_access']['roles']
         for role in roles:
-            if (role != 'offline-access' and role != 'uma_authorization'):
+            if (role != 'offline-access' and role != 'default-roles-saytu_back' and role != 'uma_authorization'):
                 return role
 
     except ValueError:

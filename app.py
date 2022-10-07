@@ -1,5 +1,7 @@
+import os
+
 import psycopg2
-from flask import Flask, g , jsonify, request
+from flask import Flask, g , jsonify, request, Config
 from script.function import *
 import jsonify, json, jsonpickle
 import requests
@@ -10,13 +12,38 @@ import logging
 import yact as yact
 
 
+
 app = Flask(__name__)
 test = "ceci est un test()"
 #export Flask_APP =
 
+# Build custom conf object yaml conf
+class YactConfig(Config):
+    def from_yaml(self, config_file, directory=None):
+
+        config = yact.from_file(config_file, directory=directory)
+        for section in config.sections:
+            self[section.upper()] = config[section]
+
+def cfg():
+
+    with open(os.path.dirname(os.path.abspath(__file__)) + './script/config.yaml', "r") as ymlfile:
+        cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
+        return cfg
+
+Client_d = cfg()['CLIENT_ID']
+client_secret = cfg()['CLIENT_SECRET']
+Realm = cfg()['REALM']
+
+client_test = os.getenv('CLIENT_ID')
+print("Le client secret est " + client_secret)
+print("Le client Id est " + Client_d)
+
+
+
 @app.route("/")
 def home():
-    return  test # "Hello Flask  on fait des tesst test"
+    return  Client_d # "Hello Flask  on fait des tesst test"
 
 #create_table_inventaire()
 @app.route("/inventaire")
@@ -59,6 +86,57 @@ def simpleinventaire():
         if con is not None:
             con.close()
     return jsonpickle.encode(data)
+
+# Keycloak test
+@app.route('/token_login/', methods=['POST'])
+def get_token():
+    body = request.get_json()
+    for field in ['username', 'password']:
+        if field not in body:
+
+            return  ("Error :::::::: Field {field}  is missing! , 400")
+
+    data = {
+        'grant_type': 'password',
+        'client_id': 'test'
+    }
+
+# function pour obtenir les variables d'env
+
+def sysEnvOrDefault(envVar, defaultVal):
+    if os.getenv(envVar):
+        return os.getenv(envVar)
+    return defaultVal
+
+# Recuperation des variables
+CLIENT_ID = cfg()['CLIENT_ID']
+CLIENT_SECRET = cfg()['CLIENT_SECRET']
+GRANT_TYPE = cfg()['GRANT_TYPE']
+#HOST = cfg()['CLIENT_ID']
+#PORT = sysEnvOrDefault("PORT", app.config['PORT'])
+URI = cfg()['URI']
+URI_USER = cfg()['URI_USER']
+URI_ROLES = cfg()['URI_ROLES']
+REALM = cfg()['REALM']
+URI_BASE = cfg()['URI_BASE']
+
+print("CLIENT_ID" + CLIENT_ID + "CLIENT_SECRET" + CLIENT_SECRET + "GRANT_TYPE" + GRANT_TYPE + "URI" + URI + "URI_USER" + URI_USER + "URI_ROLES" + URI_ROLES + "REALM" + REALM + "URI_BASE" + URI_BASE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # le headers
 # def add_headers(response):
 #     response.headers.add('Content-Type', 'application/json')
@@ -91,35 +169,35 @@ def simpleinventaire():
 # # fin de la creation des fonctions relatis à keycloak
 #
 # fonction de récupération des variables d'environnement
-def sysEnvOrDefault(envVar, defaultVal):
-    if os.getenv(envVar):
-        return os.getenv(envVar)
-    return defaultVal
-
-# Les fichiers de ressources
-
-CLIENT_ID = sysEnvOrDefault("CLIENT_ID", app.config['CLIENT_ID'])
-CLIENT_SECRET = sysEnvOrDefault("CLIENT_SECRET", app.config['CLIENT_SECRET'])
-OPENID_URL = sysEnvOrDefault("OPENID_URL", app.config['OPENID_URL'])
-ADMIN_USER = sysEnvOrDefault("ADMIN_USER", app.config['ADMIN_USER'])
-ADMIN_PASS = sysEnvOrDefault("ADMIN_PASS", app.config['ADMIN_PASS'])
-REALM = sysEnvOrDefault("REALM", app.config['REALM'])
-KEYCLOAK_URI = sysEnvOrDefault("KEYCLOAK_URI", app.config['KEYCLOAK_URI'])
-
-# Test de Keycloak
-CORS(app)
-SECRET_KEY = 'test_secret_key'
-
-app.config.update({
-    'SECRET_KEY': SECRET_KEY,
-    'TESTING': True,
-    'DEBUG': True,
-    'OIDC_CLIENT_SECRETS': 'client_secrets_templates.json',
-    'OIDC_OPENID_REALM': 'hysds',
-    'OIDC_INTROSPECTION_AUTH_METHOD': 'client_secret_post',
-    'OIDC_TOKEN_TYPE_HINT': 'access_token',
-    'OIDC-SCOPES': ['openid']
-})
+# def sysEnvOrDefault(envVar, defaultVal):
+#     if os.getenv(envVar):
+#         return os.getenv(envVar)
+#     return defaultVal
+#
+# # Les fichiers de ressources
+#
+# CLIENT_ID = sysEnvOrDefault("CLIENT_ID", app.config['CLIENT_ID'])
+# CLIENT_SECRET = sysEnvOrDefault("CLIENT_SECRET", app.config['CLIENT_SECRET'])
+# OPENID_URL = sysEnvOrDefault("OPENID_URL", app.config['OPENID_URL'])
+# ADMIN_USER = sysEnvOrDefault("ADMIN_USER", app.config['ADMIN_USER'])
+# ADMIN_PASS = sysEnvOrDefault("ADMIN_PASS", app.config['ADMIN_PASS'])
+# REALM = sysEnvOrDefault("REALM", app.config['REALM'])
+# KEYCLOAK_URI = sysEnvOrDefault("KEYCLOAK_URI", app.config['KEYCLOAK_URI'])
+#
+# # Test de Keycloak
+# CORS(app)
+# SECRET_KEY = 'test_secret_key'
+#
+# app.config.update({
+#     'SECRET_KEY': SECRET_KEY,
+#     'TESTING': True,
+#     'DEBUG': True,
+#     'OIDC_CLIENT_SECRETS': 'client_secrets_templates.json',
+#     'OIDC_OPENID_REALM': 'hysds',
+#     'OIDC_INTROSPECTION_AUTH_METHOD': 'client_secret_post',
+#     'OIDC_TOKEN_TYPE_HINT': 'access_token',
+#     'OIDC-SCOPES': ['openid']
+# })
 
 # class NewOpenIDConnect(OpenIDConnect):
 #     def accept_token_modified(self, require_token=False, scopes_required=None, render_errors=True):
