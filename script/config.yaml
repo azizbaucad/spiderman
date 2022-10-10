@@ -1,22 +1,12 @@
-#APP
-HOST: 0.0.0.0
-PORT: 5000
-
-#DATABASE
-NAME_DB: saytu_2022
-USER_DB: souxateuserprod
-PASSWORD_DB: S0ux@t3Pr0d2021
-HOST_DB: 10.137.15.70
-PORT_DB: 5432
+# Fichier de configuration
 
 #INTEGRATION DE KEYCLOACK
-REALM: saytu_back
-CLIENT_ID: saytu-client
-CLIENT_SECRET: e6519e28-f42c-482b-868e-f5437e920b8b
+REALM: network
+CLIENT_ID: rest-client
+CLIENT_SECRET: 48e70a98-b84f-49f6-8e99-495cacafa00e
 GRANT_TYPE: client_credentials
 URI_BASE: "http://localhost:8080/auth/"
-URI: "http://localhost:8080/auth/realms/saytu_back/protocol/openid-connect/token"
-URI_USER: "http://localhost:8080/auth/admin/realms/saytu_back/users"
-URI_ROLES: "http://localhost:8080/auth/admin/realms/saytu_back/roles"
-
+URI: "http://localhost:8080/auth/realms/network/protocol/openid-connect/token"
+URI_USER: "http://localhost:8080/auth/admin/realms/network/users"
+URI_ROLES: "http://localhost:8080/auth/admin/realms/network/roles"
 
