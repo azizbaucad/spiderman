@@ -18,7 +18,7 @@ def decodeToken(token):
         decoded = jwt.decode(token, options={"verify_signature": False})
         return {"data": decoded, 'code': HTTPStatus.ok}
     except:
-        return {"message": "invalid token : decodage", 'code': HTTPStatus.UNAUTHORIZED}
+        return {"message": "token " +  " " +  "is invalide :  decodage", 'code': HTTPStatus.UNAUTHORIZED}
 
 # function getRoleToken pour l'attribution des roles
 # function getRoleToken pour l'attribution des roles

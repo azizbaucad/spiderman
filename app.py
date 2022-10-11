@@ -3,9 +3,10 @@ from script.function import *
 import yact
 import requests
 import flask
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 class YactConfig(Config):
     def from_yaml(self, config_file, directory=None):
@@ -67,21 +68,17 @@ def error(message):
 @app.route('/users/', methods=['POST'])
 def create_user():
     try:
+        print()
         headers = flask.request.headers
         # data_token = decodeToken(token)
-        if request.headers.get('Authorization'):
-            if request.headers.get('Authorization').startswith('Bearer'):
-                bearer = headers.get('Authorization')
-                taille = len(bearer.split())
-                if taille == 2:
-                    token = bearer.split()[1]
-                else:
-                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-            else:
-                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        taille = 0
+        if request.headers.get('Authorization').startswith('Bearer') and len(headers.get('Authorization').split()) == 2:
+            token = headers.get('Authorization').split()[1]
+
         else:
             return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-
+            print(token)
+        print(token)
         data_token = decodeToken(token)
         code = data_token['code']
         name = data_token['data']['name']
@@ -122,6 +119,7 @@ def create_user():
                 return add_headers(response)
             return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
         else:
+            token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJejVmc21zTU9KRDh1UHFxcWN6SFQ0NkhnSkUxTUZleV9KV1BuQ1BNMWxBIn0.eyJleHAiOjE2NjU0MTY5MzUsImlhdCI6MTY2NTQxNjYzNSwianRpIjoiZTAwMzYxNTUtOWMzOS00MzRiLWE3YjAtNWI2YzNhMmIzY2VhIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL2F1dGgvcmVhbG1zL25ldHdvcmsiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiZGI0NWViMWYtY2QyNi00YmE4LTkyNDctYTVmYzhiOGUyMTZkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicmVzdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiZDc1ODRjMGMtNmU4NS00MTA2LTg3NWEtMTlmNmI1NTU1ZjJlIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsicmVhbG0tbWFuYWdlbWVudCI6eyJyb2xlcyI6WyJ2aWV3LXJlYWxtIiwidmlldy1pZGVudGl0eS1wcm92aWRlcnMiLCJtYW5hZ2UtaWRlbnRpdHktcHJvdmlkZXJzIiwiaW1wZXJzb25hdGlvbiIsInJlYWxtLWFkbWluIiwiY3JlYXRlLWNsaWVudCIsIm1hbmFnZS11c2VycyIsInF1ZXJ5LXJlYWxtcyIsInZpZXctYXV0aG9yaXphdGlvbiIsInF1ZXJ5LWNsaWVudHMiLCJxdWVyeS11c2VycyIsIm1hbmFnZS1ldmVudHMiLCJtYW5hZ2UtcmVhbG0iLCJ2aWV3LWV2ZW50cyIsInZpZXctdXNlcnMiLCJ2aWV3LWNsaWVudHMiLCJtYW5hZ2UtYXV0aG9yaXphdGlvbiIsIm1hbmFnZS1jbGllbnRzIiwicXVlcnktZ3JvdXBzIl19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6ImVtYWlsIHByb2ZpbGUiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6ImF6aXoifQ.KFWuNXW8ztx8FcJg0WzOuc29j1rSinFvkLOjoRxAKLh4jUl8z40kdwwLCSvuH70eI6wMYkVnP9CLDdhCvlRN7MkjA2eIGTNG4hWX1uP6MtS0LsBRtLqGIk1e1vDixBNJo4XrfUcTQXWPc_liMReeOez9S1Fho_CwYPbNk57Ann8FP5lzkZ67jc2EdWOF9abC1hoRDFOLK-9ZZby_WzhmMA0PKlTNdhJyo_0ZW9g2wKiS_Rps5qiMpmU-gbXfsNNOuRE27UTBYj4jmux6SQw5X3y5-77WGvxTcYMI_rjRdy6UqDikvZDB9bh360mazTC1EDHh7-GfigqxjTmPaDhGqA"
             return decodeToken(token)
 
         # code = decodeToken(token)['code']
@@ -148,7 +146,7 @@ def hello_world():  # put application's code here
 @app.route('/auth', methods=['POST'])
 def get_token():
     # TODO : Control username et password
-    body = request.json
+    body = request.get_json(force=True)
 
     data = {
 
@@ -227,10 +225,10 @@ def get_info_user(userId):
 @app.route('/users/', methods=['GET'])
 def all_users():
     print(decodeToken(request.headers.get('Authorization').split()[1]))
-    #ffdecodeToken()
+    # ffdecodeToken()
     try:
         headers = flask.request.headers
-        #print
+        # print
         if request.headers.get('Authorization'):
             if request.headers.get('Authorization').startswith('Bearer'):
                 bearer = headers.get('Authorization')
@@ -246,7 +244,7 @@ def all_users():
 
         data = decodeToken(token)
         code = data['code']
-        #name = data['data']['name']
+        # name = data['data']['name']
         if code == 200:
             if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':
 
@@ -318,4 +316,4 @@ field = "aziz"
 print(f"error() : Field {field} is missing", 400)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='10.96.16.102', port=5000, debug=True)
