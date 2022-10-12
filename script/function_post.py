@@ -24,6 +24,8 @@ def get_historique():
     dat = []
     data = pd.DataFrame()
     con = None
+    #data = request.get_json()
+    #date = data['date']
     try:
         con = connect()
         cur = con.cursor()
@@ -37,10 +39,12 @@ def get_historique():
         #return jsonpickle.encode(data)
         query = "Select numero, date_, created_at from historique_diagnostic where anomalie like '%Coupure%' and (NOW()::date  -  date_) >= 30 ;"
         data_ = pd.read_sql(query, con)
+        print(data_)
     except(Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
         if con is not None:
             con.close()
     js = data_.to_dict(orient='records')
-    return js
+    ret = js
+    return ret

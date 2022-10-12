@@ -5,10 +5,13 @@ import yact
 import requests
 import flask
 from flask_cors import CORS
+import pandas as pd
 
 import jsonpickle
+
 app = Flask(__name__)
 CORS(app)
+
 
 class YactConfig(Config):
     def from_yaml(self, config_file, directory=None):
@@ -65,10 +68,11 @@ def error(message):
         'message': message
     })
 
+
 # simple inventaire info
 @app.route('/simpleinventaire')
 def simpleinventaire():
-    #data = []
+    # data = []
     con = None
     try:
         con = connect()
@@ -77,22 +81,61 @@ def simpleinventaire():
         data = cur.fetchall()
         cur.close()
         con.commit()
-        #return jsonpickle.encode(data)
+        # return jsonpickle.encode(data)
     except(Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
         if con is not None:
             con.close()
     return data
+
+
 # requete historique/date
 @app.route('/historique', methods=['POST'])
 def historique():
-   return get_historique_by_date()
+    return get_historique_by_date()
+
 
 # return historique
-@app.route('/get_historique', methods=['GET'])
+@app.route('/get_historique', methods=['GET', 'POST'])
 def get_historique_():
-    return get_historique()
+    con = connect()
+    if request.method == 'GET':
+        res = get_historique()
+    if request.method == 'POST':
+        data = request.get_json()
+        date = data['date']
+        if date is not None and date != "":
+            # Mettre ici la requete
+            query = "Select numero, date_, created_at from historique_diagnostic where anomalie like '%Coupure%' and (NOW()::date  -  date_) >= 30 ;"
+            data_ = pd.read_sql(query, con)
+            print(data_)
+
+            res = get_historique()
+        else:
+            return "ERROR 404", 404
+    return
+
+
+@app.route('/get_test_historique', methods=['GET', 'POST'])
+def get_test_historique():
+    con = connect()
+    if request.method == 'GET':
+        res = get_historique()
+    if request.method == 'POST':
+        data = request.get_json()
+        dateFrom = data['dateFrom']
+        dateTo = data['dateTo']
+        if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
+            print(dateFrom)
+            print(dateTo)
+        query = "Select numero, date_, created_at from historique_diagnostic where anomalie like '%Coupure%' and is_anomalie = 'true' and date_ BETWEEN '{}'  AND  '{}'".format(dateFrom, dateTo)
+        data_ = pd.read_sql(query, con)
+        print(data_)
+        res = data_.to_dict(orient='records')
+        return res
+    return res
+
 # la fonction create_users
 @app.route('/users/', methods=['POST'])
 def create_user():
