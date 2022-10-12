@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify, Config
 from script.function import *
+from script.function_post import *
 import yact
 import requests
 import flask
 from flask_cors import CORS
 
+import jsonpickle
 app = Flask(__name__)
 CORS(app)
 
@@ -63,7 +65,34 @@ def error(message):
         'message': message
     })
 
+# simple inventaire info
+@app.route('/simpleinventaire')
+def simpleinventaire():
+    #data = []
+    con = None
+    try:
+        con = connect()
+        cur = con.cursor()
+        cur.execute("SElect * from historique_diagnostic limit 4 ;")
+        data = cur.fetchall()
+        cur.close()
+        con.commit()
+        #return jsonpickle.encode(data)
+    except(Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if con is not None:
+            con.close()
+    return data
+# requete historique/date
+@app.route('/historique', methods=['POST'])
+def historique():
+   return get_historique_by_date()
 
+# return historique
+@app.route('/get_historique', methods=['GET'])
+def get_historique_():
+    return get_historique()
 # la fonction create_users
 @app.route('/users/', methods=['POST'])
 def create_user():
@@ -316,4 +345,4 @@ field = "aziz"
 print(f"error() : Field {field} is missing", 400)
 
 if __name__ == '__main__':
-    app.run(host='10.96.16.102', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

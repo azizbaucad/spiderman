@@ -6,11 +6,15 @@ import logging
 
 from http import HTTPStatus
 import socket
-
+from psycopg2 import Error
+import psycopg2
 
 with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as ymlfile:
     cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
 
+# function de connection à la BDD
+def connect():
+    return psycopg2.connect(database=cfg["NAME_DB"], user=cfg["USER_DB"], password=cfg["PASSWORD_DB"], host=cfg["HOST_DB"], port=cfg["PORT_DB"])
 
 # function de decodage du token avec JWT
 def decodeToken(token):
