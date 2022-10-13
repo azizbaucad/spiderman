@@ -11,12 +11,12 @@ HOST_DB: 10.137.15.70
 PORT_DB: 5432
 
 #INTEGRATION DE KEYCLOACK
-REALM: network
-CLIENT_ID: rest-client
-CLIENT_SECRET: 48e70a98-b84f-49f6-8e99-495cacafa00e
+REALM: Saytu_realm
+CLIENT_ID: saytu_keycloak_python
+CLIENT_SECRET: 5b00ff07-a482-417d-8aff-0e5d83045078
 GRANT_TYPE: client_credentials
-URI_BASE: "http://localhost:8080/auth/"
-URI: "http://localhost:8080/auth/realms/network/protocol/openid-connect/token"
-URI_USER: "http://localhost:8080/auth/admin/realms/network/users"
-URI_ROLES: "http://localhost:8080/auth/admin/realms/network/roles"
+URI_BASE: "https://keycloak-pprod.orange-sonatel.com/auth/"
+URI: "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
+URI_USER: "https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/Saytu_realm/users"
+URI_ROLES: "https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/Saytu_realm/roles"
 
