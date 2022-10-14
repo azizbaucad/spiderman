@@ -126,10 +126,11 @@ def get_test_historique():
         data = request.get_json()
         dateFrom = data['dateFrom']
         dateTo = data['dateTo']
+        Duree = data['Duree']
         if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
             print(dateFrom)
             print(dateTo)
-        query = "Select numero, date_, created_at from historique_diagnostic where anomalie like '%Coupure%' and is_anomalie = 'true' and date_ BETWEEN '{}'  AND  '{}'".format(dateFrom, dateTo)
+        query = "Select numero, count(numero) FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero HAVING COUNT(numero) = {}".format(dateFrom, dateTo, Duree)
         data_ = pd.read_sql(query, con)
         print(data_)
         res = data_.to_dict(orient='records')
