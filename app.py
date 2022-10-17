@@ -236,7 +236,7 @@ def get_Date_Diff():
     if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
         print(dateFrom)
         print(dateTo)
-    query = "Select numero, count(numero) FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero HAVING COUNT(numero) = {}".format(
+    query = "Select numero, ip, anomalie, nom_olt,  count(numero) as Dureee FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero, ip, anomalie, nom_olt HAVING COUNT(numero) = {}".format(
         dateFrom, dateTo, Duree)
     data_ = pd.read_sql(query, con)
     print(data_)
