@@ -6,6 +6,7 @@ import requests
 import flask
 from flask_cors import CORS
 import pandas as pd
+from datetime import datetime
 
 import jsonpickle
 
@@ -136,6 +137,86 @@ def get_test_historique():
         res = data_.to_dict(orient='records')
         return res
     return res
+
+# Fontion de test des args
+@app.route('/with_parameters')
+def with_parameters():
+    name = request.args.get('name')
+    age = request.args.get('age')
+    return jsonify(message="My name is" + str(name) + "and I am" + str(age))
+
+@app.route('/with_url_variables/<string:name>/<int:age>')
+def with_url_variables(name: str, age: int):
+    return jsonify(message="My name is" + name + " and I am" + str(age) + "Years old")
+
+@app.route('/index/<subject>')
+def subject(subject):
+    return "The value is: " + subject
+
+@app.route('/posteee/<int:post_id>/<string:test>')
+def show_post(post_id, test):
+    # show the post with the given id, the id is an integer
+    return f'Post {post_id}, Test' + str(test)
+
+@app.route('/test_query')
+def test_query():
+    # data = []
+    con = None
+    try:
+        con = connect()
+        cur = con.cursor()
+        cur.execute("SElect * from historique_diagnostic limit 4 ;")
+        data = cur.fetchall()
+        cur.close()
+        con.commit()
+        # return jsonpickle.encode(data)
+    except(Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if con is not None:
+            con.close()
+    return data
+
+
+def datebetween(date1, date2):
+    date1 = datetime.strptime(date1, "%Y-%m-%d")
+    date2 = datetime.strptime(date2, "%Y-%m-%d")
+    duree = date2 - date1
+    return duree
+@app.route('/testdatee', methods=['POST','GET'])
+def testdatee():
+    date1 = request.args.get('date1')
+    date2 = request.args.get('date2')
+    print("Date 1 is" + date1 + "Date 2 is" + date2)
+    return "Date 1 is" + date1 + "Date 2 is" + date2
+@app.route('/datee', methods=['POST','GET'])
+def get_Date_Diff():
+    con = connect()
+    dateFrom = request.args.get('dateFrom')
+    dateTo = request.args.get('dateTo')
+    #dateFrom = datetime.strptime(dateFrom, '%Y-%m-%d')
+    #dateTo = datetime.strptime(dateTo, '%Y-%m-%d')
+    #dateFrom = str(dateFrom)
+    #dateTo = str(dateTo)
+    #dateFrom = datetime.strptime(dateFrom, '%Y-%m-%d')
+    #dateTo = datetime.strptime(dateTo, '%Y-%m-%d')
+    #Duree = abs(dateFrom - dateTo)
+    #Duree = Duree.days
+    Duree = request.args.get('Duree')
+    print("DateFrom is " + dateFrom + "DateTo is " + dateTo + "and Duree is " + Duree)
+
+    if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
+        print(dateFrom)
+        print(dateTo)
+    query = "Select numero, count(numero) FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero HAVING COUNT(numero) = {}".format(
+        dateFrom, dateTo, Duree)
+    data_ = pd.read_sql(query, con)
+    print(data_)
+    res = data_.to_dict(orient='records')
+    return res
+
+    #return 'From Date is'+request.args.get('from_date') + ' To Date is ' + request.args.get('to_date')
+
 
 # la fonction create_users
 @app.route('/users/', methods=['POST'])
