@@ -245,6 +245,54 @@ def get_Date_Diff():
 
     #return 'From Date is'+request.args.get('from_date') + ' To Date is ' + request.args.get('to_date')
 
+#La fonction qui retourne les numeros en doublon
+@app.route('/doublons', methods=['GET'])
+def getDoublon():
+    con = connect()
+    query = ''' Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, db.created_at , mt.oltrxpwr, mt.ontrxpwr, mt.date
+                From doublons_ftth as db, metrics_ftth as mt
+                where db.service_id = mt.numero limit 100 '''
+    data_ = pd.read_sql(query, con)
+    print(data_)
+    res = data_.to_dict(orient='records')
+    return res
+
+# La fonction qui retourne pour chauqe numero son doublon
+@app.route('/doublons', methods=['GET', 'POST'])
+def get_Doublon_By_Number():
+    con = connect()
+
+    numero = request.args.get('numero')
+    print(type(numero))
+    print("le numero saisi est" + numero)
+
+    if numero is not None and numero != "":
+        print(numero)
+    query = ''' 
+                Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr, mt.date
+                    From doublons_ftth as db, metrics_ftth as mt
+                    where db.service_id = mt.numero
+                    and db.service_id = '{}' order by mt.date desc
+            '''.format(numero)
+    data_ = pd.read_sql(query, con)
+    print(data_)
+    res = data_.to_dict(orient='records')
+    return res
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # la fonction create_users
 @app.route('/users/', methods=['POST'])
