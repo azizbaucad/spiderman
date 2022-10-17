@@ -7,6 +7,7 @@ import flask
 from flask_cors import CORS
 import pandas as pd
 from datetime import datetime
+from datetime import date
 
 import jsonpickle
 
@@ -187,24 +188,51 @@ def datebetween(date1, date2):
 def testdatee():
     date1 = request.args.get('date1')
     date2 = request.args.get('date2')
+
+    print(type(date1))
+    print(type(date2))
     print("Date 1 is" + date1 + "Date 2 is" + date2)
-    return "Date 1 is" + date1 + "Date 2 is" + date2
+    #date1 = datetime.strptime()
+    date1 = datetime.strptime(date1, '%Y-%m-%d')
+    date2 = datetime.strptime(date2, '%Y-%m-%d')
+    date1 = date1.date()
+    date2 = date2.date()
+    print(type(date1))
+    print(type(date2))
+    delta = date2 - date1
+    print("La duree est de :")
+    print(delta.days)
+    #print("Date 1 is" + date1 + "Date 2 is" + date2)
+    return "print(type(date1)) i "
 @app.route('/datee', methods=['POST','GET'])
 def get_Date_Diff():
     con = connect()
+
     dateFrom = request.args.get('dateFrom')
     dateTo = request.args.get('dateTo')
-    #dateFrom = datetime.strptime(dateFrom, '%Y-%m-%d')
-    #dateTo = datetime.strptime(dateTo, '%Y-%m-%d')
-    #dateFrom = str(dateFrom)
-    #dateTo = str(dateTo)
-    #dateFrom = datetime.strptime(dateFrom, '%Y-%m-%d')
-    #dateTo = datetime.strptime(dateTo, '%Y-%m-%d')
-    #Duree = abs(dateFrom - dateTo)
-    #Duree = Duree.days
-    Duree = request.args.get('Duree')
-    print("DateFrom is " + dateFrom + "DateTo is " + dateTo + "and Duree is " + Duree)
 
+    print(type(dateFrom))
+    print(type(dateTo))
+
+    print("Date iss" + dateFrom + "Date To is" + dateTo)
+    dateFrom = datetime.strptime(dateFrom, '%Y-%m-%d')
+    dateTo = datetime.strptime(dateTo, '%Y-%m-%d')
+
+    dateFrom = dateFrom.date()
+    dateTo = dateTo.date()
+
+    print(type(dateFrom))
+    print(type(dateTo))
+
+    Duree = dateTo - dateFrom
+
+    print("La duree est de")
+    print(Duree.days)
+    Duree = Duree.days
+    #Duree = request.args.get('Duree')
+    #print("DateFrom is " + dateFrom + "DateTo is " + dateTo + "and Duree is " + Duree)
+    print(type(dateFrom))
+    print(type(dateTo))
     if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
         print(dateFrom)
         print(dateTo)
