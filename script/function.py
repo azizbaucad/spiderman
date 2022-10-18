@@ -8,6 +8,7 @@ from http import HTTPStatus
 import socket
 from psycopg2 import Error
 import psycopg2
+import pandas as pd
 
 with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as ymlfile:
     cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
@@ -58,3 +59,26 @@ def log_app(message):
     # logging.StreamHandler(sys.stdout)
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+
+# La fonction getAllDoublon
+def getAllDoublon():
+    con = connect()
+    query = ''' Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, db.created_at , mt.oltrxpwr, mt.ontrxpwr
+                    From doublons_ftth as db, metrics_ftth as mt
+                    where db.service_id = mt.numero limit 100 '''
+    data_ = pd.read_sql(query, con)
+    print(data_)
+    res = data_.to_dict(orient='records')
+    return res
+
+# La fonction affichage des dernieres heure de coupure
+def getDerniereHeureDeCoupure():
+
+    con = connect()
+    query = ''' Select numero, ip, nom_olt, Max(created_at) as Derniere_heure_coupure
+               from maintenance_predictive_ftth Group by numero, ip, nom_olt
+            '''
+    data_ = pd.read_sql(query, con)
+    print(data_)
+    res = data_.to_dict(orient='records')
+    return res
