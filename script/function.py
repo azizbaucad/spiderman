@@ -63,9 +63,12 @@ def log_app(message):
 # La fonction getAllDoublon
 def getAllDoublon():
     con = connect()
-    query = ''' Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, db.created_at , mt.oltrxpwr, mt.ontrxpwr
+    query = ''' 
+                    Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, db.created_at::date , mt.oltrxpwr, mt.ontrxpwr
                     From doublons_ftth as db, metrics_ftth as mt
-                    where db.service_id = mt.numero limit 100 '''
+                    where db.service_id = mt.numero and db.created_at::date = mt.date
+                     
+            '''
     data_ = pd.read_sql(query, con)
     print(data_)
     res = data_.to_dict(orient='records')
@@ -75,8 +78,8 @@ def getAllDoublon():
 def getDerniereHeureDeCoupure():
 
     con = connect()
-    query = ''' Select numero, ip, nom_olt, Max(created_at) as Derniere_heure_coupure
-               from maintenance_predictive_ftth Group by numero, ip, nom_olt
+    query = ''' Select numero,nom_olt, ip, vendeur, anomalie, criticite, Max(created_at) as created_at  
+                from maintenance_predictive_ftth Group by numero,nom_olt, ip, vendeur, anomalie, criticite
             '''
     data_ = pd.read_sql(query, con)
     print(data_)

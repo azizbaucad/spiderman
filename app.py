@@ -262,9 +262,10 @@ def getDoublon():
         else:
 
             query = ''' 
-                            Select db.service_id, db.created_at, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr
+                            Select db.service_id, db.created_at::date, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr
                                 From doublons_ftth as db, metrics_ftth as mt
-                                where db.service_id = mt.numero
+                                where db.service_id = mt.numero 
+                                and db.created_at::date = mt.date
                                 and db.service_id = '{}' 
                         '''.format(numero)
             data_ = pd.read_sql(query, con)
@@ -291,7 +292,7 @@ def get_Heure_Coupure():
         else:
 
             query = '''
-                        Select numero,nom_olt, ip, vendeur, anomalie, criticite, created_at as Derniere_Heure_Coupure
+                        Select numero,nom_olt, ip, vendeur, anomalie, criticite, created_at
                                from maintenance_predictive_ftth
                                where numero = '{}' 
                                order by created_at DESC limit 1
