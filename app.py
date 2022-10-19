@@ -262,10 +262,10 @@ def getDoublon():
         else:
 
             query = ''' 
-                            Select db.service_id as numero, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr, mt.date
+                            Select db.service_id, db.created_at, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr
                                 From doublons_ftth as db, metrics_ftth as mt
                                 where db.service_id = mt.numero
-                                and db.service_id = '{}' order by mt.date desc
+                                and db.service_id = '{}' 
                         '''.format(numero)
             data_ = pd.read_sql(query, con)
             print(data_)
