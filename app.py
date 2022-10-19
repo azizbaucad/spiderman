@@ -247,140 +247,136 @@ def get_Date_Diff():
     #return 'From Date is'+request.args.get('from_date') + ' To Date is ' + request.args.get('to_date')
 
 #La fonction qui retourne les numeros en doublon
-@app.route('/doublons', methods=['GET', 'POST'])
+@app.route('/doublons', methods=['GET'])
 def getDoublon():
     if request.method == 'GET':
-        return getAllDoublon()
-    else:
+
         con = connect()
 
         numero = request.args.get('numero')
-        print(type(numero))
-        print("le numero saisi est" + numero)
+        #print(type(numero))
+        #print("le numero saisi est" + numero)
 
-        if numero is not None and numero != "":
-            print(numero)
-        query = ''' 
-                        Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr, mt.date
-                            From doublons_ftth as db, metrics_ftth as mt
-                            where db.service_id = mt.numero
-                            and db.service_id = '{}' order by mt.date desc
-                    '''.format(numero)
-        data_ = pd.read_sql(query, con)
-        print(data_)
-        res = data_.to_dict(orient='records')
-        return res
+        if numero is None or numero == "":
+            return getAllDoublon()
+        else:
+
+            query = ''' 
+                            Select db.service_id as numero, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr, mt.date
+                                From doublons_ftth as db, metrics_ftth as mt
+                                where db.service_id = mt.numero
+                                and db.service_id = '{}' order by mt.date desc
+                        '''.format(numero)
+            data_ = pd.read_sql(query, con)
+            print(data_)
+            res = data_.to_dict(orient='records')
+            return res
 
 
 
-# La fonction qui retourne pour chauqe numero son doublon
-@app.route('/doublons', methods=['GET', 'POST'])
-def get_Doublon_By_Number():
-    con = connect()
-
-    numero = request.args.get('numero')
-    print(type(numero))
-    print("le numero saisi est" + numero)
-
-    if numero is not None and numero != "":
-        print(numero)
-    query = ''' 
-                Select db.service_id, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr, mt.date
-                    From doublons_ftth as db, metrics_ftth as mt
-                    where db.service_id = mt.numero
-                    and db.service_id = '{}' order by mt.date desc
-            '''.format(numero)
-    data_ = pd.read_sql(query, con)
-    print(data_)
-    res = data_.to_dict(orient='records')
-    return res
 
 #API pour l'affichage de la dernière date de coupure
-@app.route('/derniereheureCoupure', methods=['GET','POST'])
+@app.route('/derniereheureCoupure', methods=['GET'])
 def get_Heure_Coupure():
     if request.method == 'GET':
-        return getDerniereHeureDeCoupure()
-    else:
+
+
 
         con = connect()
         numero = request.args.get('numero')
-        print(type(numero))
-        print("le numero saisi est" + numero)
-        if numero is not None and numero != "":
-            print(numero)
-        query = '''
-                    Select numero,nom_olt, ip, vendeur, anomalie, criticite, created_at as Derniere_Heure_Coupure
-                           from maintenance_predictive_ftth
-                           where numero = '{}' 
-                           order by created_at DESC limit 1
-                '''.format(numero)
-        data_ = pd.read_sql(query, con)
-        print(data_)
-        res = data_.to_dict(orient='records')
-        return res
+        #print(type(numero))
+        #print("le numero saisi est" + numero)
+        if numero is None or numero == "":
+            return getDerniereHeureDeCoupure()
+        else:
 
-# la fonction create_users
-@app.route('/users/', methods=['POST'])
-def create_user():
+            query = '''
+                        Select numero,nom_olt, ip, vendeur, anomalie, criticite, created_at as Derniere_Heure_Coupure
+                               from maintenance_predictive_ftth
+                               where numero = '{}' 
+                               order by created_at DESC limit 1
+                    '''.format(numero)
+            data_ = pd.read_sql(query, con)
+            print(data_)
+            res = data_.to_dict(orient='records')
+            return res
+
+#la fonction d'activation de l'utilisateur
+@app.route('/users/enable<string:userId>/', methods=['PUT'])
+def enable_disable_user(userId):
     try:
-        print()
         headers = flask.request.headers
-        # data_token = decodeToken(token)
-        taille = 0
-        if request.headers.get('Authorization').startswith('Bearer') and len(headers.get('Authorization').split()) == 2:
-            token = headers.get('Authorization').split()[1]
+        response = get_user_by_id(userId)
 
+        if response.get("status") == 'error':
+            return {"message": "User Not Found", 'code': HTTPStatus.NOT_FOUND}
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
         else:
             return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-            print(token)
-        print(token)
+
         data_token = decodeToken(token)
         code = data_token['code']
         name = data_token['data']['name']
         if code == 200:
             if getRoleToken(token) == 'admin':
-                url = URI_USER
-
-                body = request.json
-                for field in ['firstName', 'lastName', 'username', 'password']:
+                url = URI_USER + '/' + userId
+                body = request.get_json()
+                for field in ['enabled']:
                     if field not in body:
-                        return error(f"Field {field} is missing"), 400
-                data = {
-                    "firstName": body['firstName'],
-                    "lastName": body['lastName'],
-                    "enabled": "true",
-                    "username": body['username'],
-                    "credentials": [
-                        {
-                            "type": "password",
-                            "value": body['password'],
-                            "temporary": False
+                        return error(f"Field {field} is missing!"), 400
 
-                        }
-                    ]
+                data = {
+                    "enabled": not body['enabled'],
                 }
+
                 # return data
                 donnee = adminToken()
+                token_admin = donnee['tokens']["access_token"]
                 headers = get_keycloak_headers()
-                response = requests.post(url, headers=headers, json=data)
-                if response.status_code == 400:
-                    return {"message": "Le nom de l'utilisateur existe deja", 'status': 'error',
-                            'code': response.status_code}
-                if response.status_code > 201:
-                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                response = requests.put(url, headers=headers, json=data)
+                if response.status_code > 204:
+                    return {"message": "Erreur", 'status':'error', 'code': response.status_code}
+
                 response = jsonify(
-                    {'status': 'Success', 'data': 'Utilisateur Cree avec success', 'code': HTTPStatus.OK})
-                # Mettre ici les logs
+                    {'status': 'Success', 'data': 'Utilisateur Active/Desactive Avec success',
+                     'code': HTTPStatus.OK}
+                )
+                if not body['enabled'] == True:
+                    print('ok')
+                    messageLogging = name + "a active le utilisateur " + get_user_by_id(userId)['data']['username']
+                else:
+                    print('ok')
+                    messageLogging = name + " a desactive le utilisateur" + get_user_by_id(userId)['data']['username']
+
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
                 return add_headers(response)
             return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
         else:
-            token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJJejVmc21zTU9KRDh1UHFxcWN6SFQ0NkhnSkUxTUZleV9KV1BuQ1BNMWxBIn0.eyJleHAiOjE2NjU0MTY5MzUsImlhdCI6MTY2NTQxNjYzNSwianRpIjoiZTAwMzYxNTUtOWMzOS00MzRiLWE3YjAtNWI2YzNhMmIzY2VhIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL2F1dGgvcmVhbG1zL25ldHdvcmsiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiZGI0NWViMWYtY2QyNi00YmE4LTkyNDctYTVmYzhiOGUyMTZkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicmVzdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiZDc1ODRjMGMtNmU4NS00MTA2LTg3NWEtMTlmNmI1NTU1ZjJlIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsicmVhbG0tbWFuYWdlbWVudCI6eyJyb2xlcyI6WyJ2aWV3LXJlYWxtIiwidmlldy1pZGVudGl0eS1wcm92aWRlcnMiLCJtYW5hZ2UtaWRlbnRpdHktcHJvdmlkZXJzIiwiaW1wZXJzb25hdGlvbiIsInJlYWxtLWFkbWluIiwiY3JlYXRlLWNsaWVudCIsIm1hbmFnZS11c2VycyIsInF1ZXJ5LXJlYWxtcyIsInZpZXctYXV0aG9yaXphdGlvbiIsInF1ZXJ5LWNsaWVudHMiLCJxdWVyeS11c2VycyIsIm1hbmFnZS1ldmVudHMiLCJtYW5hZ2UtcmVhbG0iLCJ2aWV3LWV2ZW50cyIsInZpZXctdXNlcnMiLCJ2aWV3LWNsaWVudHMiLCJtYW5hZ2UtYXV0aG9yaXphdGlvbiIsIm1hbmFnZS1jbGllbnRzIiwicXVlcnktZ3JvdXBzIl19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6ImVtYWlsIHByb2ZpbGUiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6ImF6aXoifQ.KFWuNXW8ztx8FcJg0WzOuc29j1rSinFvkLOjoRxAKLh4jUl8z40kdwwLCSvuH70eI6wMYkVnP9CLDdhCvlRN7MkjA2eIGTNG4hWX1uP6MtS0LsBRtLqGIk1e1vDixBNJo4XrfUcTQXWPc_liMReeOez9S1Fho_CwYPbNk57Ann8FP5lzkZ67jc2EdWOF9abC1hoRDFOLK-9ZZby_WzhmMA0PKlTNdhJyo_0ZW9g2wKiS_Rps5qiMpmU-gbXfsNNOuRE27UTBYj4jmux6SQw5X3y5-77WGvxTcYMI_rjRdy6UqDikvZDB9bh360mazTC1EDHh7-GfigqxjTmPaDhGqA"
             return decodeToken(token)
 
-        # code = decodeToken(token)['code']
 
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
+
+@app.route('/testinfouser', methods=['GET'])
+def testinfouser():
+    return get_user_by_id("64b43eff-fcdf-4394-b207-0f067afd7894")
 
 
 # creation de la fonction get_keycloak_headers
@@ -436,11 +432,12 @@ def get_user_by_id(userId):
     try:
         url = URI_USER + '/' + userId
         donnee = adminToken()
-        token_admin = donnee['tokens']['access_token']
+        token_admin = donnee['tokens']["access_token"]
         response = requests.get(url,
                                 headers={'Authorization': 'Bearer {}'.format(token_admin)})
         if response.status_code > 200:
             return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+            #print(resp)
         tokens_data = response.json()
         data = {
             "enabled": tokens_data['enabled'],
@@ -450,7 +447,9 @@ def get_user_by_id(userId):
             "username": tokens_data['username'],
         }
         response = {'status': 'Success', 'data': data, 'code': HTTPStatus.OK}
+        print(response)
         return response
+        #print(resp)
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 

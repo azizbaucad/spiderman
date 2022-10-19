@@ -21,9 +21,9 @@ def connect():
 def decodeToken(token):
     try:
         decoded = jwt.decode(token, options={"verify_signature": False})
-        return {"data": decoded, 'code': HTTPStatus.ok}
+        return {"data": decoded, 'code': HTTPStatus.OK}
     except:
-        return {"message": "token " +  " " +  "is invalide :  decodage", 'code': HTTPStatus.UNAUTHORIZED}
+        return {"message": "invalid token ", 'code': HTTPStatus.UNAUTHORIZED}
 
 # function getRoleToken pour l'attribution des roles
 # function getRoleToken pour l'attribution des roles
@@ -31,7 +31,7 @@ def getRoleToken(token):
     try:
         roles = decodeToken(token)['data']['realm_access']['roles']
         for role in roles:
-            if (role != 'offline-access' and role != 'default-roles-saytu_back' and role != 'uma_authorization'):
+            if (role != 'offline_access' and role != 'default-roles-saytu_realm' and role != 'uma_authorization'):
                 return role
 
     except ValueError:
