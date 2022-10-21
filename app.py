@@ -506,19 +506,31 @@ def get_info_user(userId):
 def all_users():
     try:
         headers = flask.request.headers
+        bearer = headers.get('Authorization')
+        print("-------------------------------------Bearer---------------------------------")
+        print(bearer)
+
         if request.headers.get('Authorization'):
+            print("----------------------------------Authorization--------------------")
             if request.headers.get('Authorization').startswith('Bearer'):
+                print("-------------------------------Le Bearer est----------------------")
                 bearer = headers.get('Authorization')
+                #print(bearer)
+                print("-------------------------------La taille est-----------------------")
                 taille = len(bearer.split())
+                print(taille)
                 if taille == 2:
                     token = bearer.split()[1]
-                else:
-                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-            else:
-                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-        else:
-            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-
+                    print("---------------------------le token est-------------------------")
+                    #print(token)
+        #         else:
+        #             return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        #     else:
+        #         return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        # else:
+        #     return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        print("--------------------------------------headers--------------------------")
+        #print(headers)
         data = decodeToken(token)
         print("--------------------------------------------------------------------token-----------------------------------------------------------------------")
         print(data)
@@ -530,46 +542,49 @@ def all_users():
         print("---------------------------------------------------------------------name-------------------------------------------------------------------------")
         print(name)
         if code == 200:
-            if getRoleToken(token) == 'admin' or  getRoleToken(token) == 'sf': #getRoleToken(token) == 'admin' or
+            # Mettre ici les autorisations if getRoleToken(token) == 'admin' or  getRoleToken(token) == 'sf': #getRoleToken(token) == 'admin' or
 
-                url = URI_USER #+'?max=1000'
-                donnee = adminToken()
-                token_admin = donnee['tokens']['access_token']
-                response = requests.request('GET', url, headers = {'Authorization': 'Bearer' + token_admin})
-                #response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
-                # if response.status_code > 200:
-                #     print(token_admin)
-                #     return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
-                tokens_data = response.json()
-                print("La reponse est")
-                print(tokens_data)
-                # return tokens_data[0]
-                result = []
-                # for i in range(len(tokens_data)):
-                #     print(tokens_data)
-                #     data = {
-                #         #"enabled": tokens_data[i]['enabled'],
-                #         "id": tokens_data[i]['id'],
-                #         "firstName": tokens_data[i]['firstName'].split(' ', 1)[0],
-                #         "lastName": tokens_data[i]['lastName'].upper(),
-                #         "username": tokens_data[i]['username'],
-                #         "profil": get_info_user(tokens_data[i]['id']),
-                #     }
-                #     result.append(data)
-                # return result
-                response = jsonify({'status': 'Success', 'data': result, 'code': HTTPStatus.OK})
-                messageLogging = name + " a consulté la liste des utilisateurs "
-                message_log = {
-                    "url.path": request.base_url,
-                    "http.request.method": request.method,
-                    "client.ip": getIpAdress(),
-                    "event.message": messageLogging,
-                    "process.id": os.getpid(),
-                }
-                print('------------------------------------------------------message du log------------------------------------------------------------------------------------')
-                log_app(message_log)
-                # logger_user(messageLogging, LOG_AUTHENTIFICATION)
-                return add_headers(response)
+            url = URI_USER + '?max=1000'
+            donnee = adminToken()
+            token_admin = donnee['tokens']['access_token']
+            print("---------------------------Le token admin est-------------------------")
+            print(token_admin)
+            response = requests.request('GET', url, headers = {'Authorization': 'Bearer' + token_admin})
+            print("-----------------------------------la repone autorization et Bearer est------------")
+            #response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+            # if response.status_code > 200:
+            #     print(token_admin)
+            #     return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+            tokens_data = response.json()
+            print("------------------------------le tokens data à afficher est-----------------------")
+            print(tokens_data)
+            # return tokens_data[0]
+            result = []
+            # for i in range(len(tokens_data)):
+            #     print(tokens_data)
+            #     data = {
+            #         #"enabled": tokens_data[i]['enabled'],
+            #         #"id": tokens_data[i]['id'],
+            #         "firstName": tokens_data[i]['firstName'].split(' ', 1)[0],
+            #         "lastName": tokens_data[i]['lastName'].upper(),
+            #         "username": tokens_data[i]['username'],
+            #         #"profil": get_info_user(tokens_data[i]['id']),
+            #     }
+            #     result.append(data)
+            #return result
+            response = jsonify({'status': 'Success', 'data': result, 'code': HTTPStatus.OK})
+            messageLogging = name + " a consulté la liste des utilisateurs "
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            print('------------------------------------------------------message du log------------------------------------------------------------------------------------')
+            log_app(message_log)
+            # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+            #return add_headers(response)
             messageLogging = name + " a tenté de consulter la liste des utilisateurs "
             message_log = {
                 "url.path": request.base_url,
@@ -581,7 +596,9 @@ def all_users():
             print('--------------------------------------------------------------le message du log--------------------------------------------------------------------')
             log_app(message_log)
             # logger_user(messageLogging, LOG_AUTHENTIFICATION)
-            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+            #return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+            return add_headers(response)
+            #return result
         else:
             return decodeToken(token)
     except ValueError:
