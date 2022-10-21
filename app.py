@@ -302,21 +302,48 @@ def get_Heure_Coupure():
             res = data_.to_dict(orient='records')
             return res
 
+# La fonction de récupération du taux d'ocuupation
+@app.route('/tauxoccupation', methods=['GET'])
+def tauxOccupation():
+    con = connect()
+    dateFrom = request.args.get('dateFrom')
+    dateTo = request.args.get('dateTo')
+
+    if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "" :
+
+
+        query = ''' 
+                    select slot,  pon, nom_olt,created_at::date, count(distinct service_id) 
+                    from inventaireglobal_ftth where created_at::date between '{}' and '{}'
+                    group by pon, slot,nom_olt,created_at::date
+                '''.format(dateFrom, dateTo)
+        data_ = pd.read_sql(query, con)
+        print(data_)
+        res = data_.to_dict(orient='records')
+        return res
+    else:
+        return "Veullez saisir une date"
+
+
 #la fonction d'activation de l'utilisateur
-@app.route('/users/enable<string:userId>/', methods=['PUT'])
+@app.route('/users/enable/<string:userId>/', methods=['PUT'])
 def enable_disable_user(userId):
     try:
         headers = flask.request.headers
         response = get_user_by_id(userId)
 
         if response.get("status") == 'error':
+            print(response)
+            print(get_user_by_id(userId))
             return {"message": "User Not Found", 'code': HTTPStatus.NOT_FOUND}
+
         if request.headers.get('Authorization'):
             if request.headers.get('Authorization').startswith('Bearer'):
                 bearer = headers.get('Authorization')
                 taille = len(bearer.split())
                 if taille == 2:
                     token = bearer.split()[1]
+                    print(token)
                 else:
                     return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
             else:
@@ -327,6 +354,8 @@ def enable_disable_user(userId):
         data_token = decodeToken(token)
         code = data_token['code']
         name = data_token['data']['name']
+        print(code)
+        print(name)
         if code == 200:
             if getRoleToken(token) == 'admin':
                 url = URI_USER + '/' + userId
@@ -438,7 +467,6 @@ def get_user_by_id(userId):
                                 headers={'Authorization': 'Bearer {}'.format(token_admin)})
         if response.status_code > 200:
             return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
-            #print(resp)
         tokens_data = response.json()
         data = {
             "enabled": tokens_data['enabled'],
@@ -448,11 +476,9 @@ def get_user_by_id(userId):
             "username": tokens_data['username'],
         }
         response = {'status': 'Success', 'data': data, 'code': HTTPStatus.OK}
-        print(response)
         return response
-        #print(resp)
     except ValueError:
-        return jsonify({'status': 'Error', 'error': ValueError})
+        return jsonify({'status': 'Error ', 'error': ValueError})
 
 
 # la fonction get_info_user
@@ -461,8 +487,7 @@ def get_info_user(userId):
         url = URI_USER + '/' + userId + '/role-mappings/realm'
         donnee = adminToken()
         token_admin = donnee['tokens']["access_token"]
-        response = requests.get(url,
-                                headers={'Authorization': 'Bearer {}'.format(token_admin)})
+        response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
         if response.status_code > 200:
             return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
             tokens_data = response.json
@@ -479,11 +504,8 @@ def get_info_user(userId):
 
 @app.route('/users/', methods=['GET'])
 def all_users():
-    print(decodeToken(request.headers.get('Authorization').split()[1]))
-    # ffdecodeToken()
     try:
         headers = flask.request.headers
-        # print
         if request.headers.get('Authorization'):
             if request.headers.get('Authorization').startswith('Bearer'):
                 bearer = headers.get('Authorization')
@@ -491,60 +513,73 @@ def all_users():
                 if taille == 2:
                     token = bearer.split()[1]
                 else:
-                    return {"message": "invalid token roel", 'code': HTTPStatus.UNAUTHORIZED}
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
             else:
-                return {"message": "invalid token orl", 'code': HTTPStatus.UNAUTHORIZED}
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
         else:
-            return {"message": "invalid token rlo", 'code': HTTPStatus.UNAUTHORIZED}
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
 
         data = decodeToken(token)
+        print("--------------------------------------------------------------------token-----------------------------------------------------------------------")
+        print(data)
         code = data['code']
-        # name = data['data']['name']
+        print("--------------------------------------------------------------------code-------------------------------------------------------------------------")
+        print(code)
+        #name = "test"
+        name = data['data']['name'] #['preferred_username']
+        print("---------------------------------------------------------------------name-------------------------------------------------------------------------")
+        print(name)
         if code == 200:
-            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':
+            if getRoleToken(token) == 'admin' or  getRoleToken(token) == 'sf': #getRoleToken(token) == 'admin' or
 
-                url = URI_USER + '?max=1000'
+                url = URI_USER #+'?max=1000'
                 donnee = adminToken()
-                token_admin = donnee['tokens']["access_token"]
-                response = requests.get(url,
-                                        headers={'Authorization': 'Bearer {}'.format(token_admin)})
-                if response.status_code > 200:
-                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                token_admin = donnee['tokens']['access_token']
+                response = requests.request('GET', url, headers = {'Authorization': 'Bearer' + token_admin})
+                #response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+                # if response.status_code > 200:
+                #     print(token_admin)
+                #     return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
                 tokens_data = response.json()
+                print("La reponse est")
+                print(tokens_data)
                 # return tokens_data[0]
                 result = []
-                for i in range(len(tokens_data)):
-                    data = {
-                        "enabled": tokens_data[i]['enabled'],
-                        "id": tokens_data[i]['id'],
-                        "firstName": tokens_data[i]['firstName'].split(' ', 1)[0],
-                        "lastName": tokens_data[i]['lastName'].upper(),
-                        "username": tokens_data[i]['username'],
-                        "profil": get_info_user(tokens_data[i]['id']),
-                    }
-                    result.append(data)
+                # for i in range(len(tokens_data)):
+                #     print(tokens_data)
+                #     data = {
+                #         #"enabled": tokens_data[i]['enabled'],
+                #         "id": tokens_data[i]['id'],
+                #         "firstName": tokens_data[i]['firstName'].split(' ', 1)[0],
+                #         "lastName": tokens_data[i]['lastName'].upper(),
+                #         "username": tokens_data[i]['username'],
+                #         "profil": get_info_user(tokens_data[i]['id']),
+                #     }
+                #     result.append(data)
                 # return result
                 response = jsonify({'status': 'Success', 'data': result, 'code': HTTPStatus.OK})
-                # messageLogging = name + " a consulté la liste des utilisateurs "
-                # message_log = {
-                #     "url.path": request.base_url,
-                #     "http.request.method": request.method,
-                #     "client.ip": getIpAdress(),
-                #     "event.message": messageLogging,
-                #     "process.id": os.getpid(),
-                # }
-                # log_app(message_log)
+                messageLogging = name + " a consulté la liste des utilisateurs "
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                print('------------------------------------------------------message du log------------------------------------------------------------------------------------')
+                log_app(message_log)
                 # logger_user(messageLogging, LOG_AUTHENTIFICATION)
                 return add_headers(response)
-            # messageLogging = name + " a tenté de consulter la liste des utilisateurs "
-            # message_log = {
-            #     "url.path": request.base_url,
-            #     "http.request.method": request.method,
-            #     "client.ip": getIpAdress(),
-            #     "event.message": messageLogging,
-            #     "process.id": os.getpid(),
-            # }
-            # log_app(message_log)
+            messageLogging = name + " a tenté de consulter la liste des utilisateurs "
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            print('--------------------------------------------------------------le message du log--------------------------------------------------------------------')
+            log_app(message_log)
             # logger_user(messageLogging, LOG_AUTHENTIFICATION)
             return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
         else:
