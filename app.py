@@ -602,6 +602,49 @@ def testGetUserByID():
     response = {'status': 'Success', 'data': data, 'code': HTTPStatus.OK}
     return response
     #return {'message': 'test', 'status': status, 'code': 200}
+
+# la fonction permettant d'avoir tous les info user
+@app.route('/testGetInfoUser', methods=['GET'])
+def testGetInfoUser():
+    URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
+    userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
+    url = URI_USER + '/' + userId + '/role-mappings/realm'
+    donnee = testGetTokenUserAdmin()
+    token_admin = donnee['tokens']['access_token']
+    response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+    if response.status_code > 200:
+        return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+    tokens_data = response.json()
+    data = {
+        "name": tokens_data[0]['name'],
+        "id": tokens_data[0]['id']
+
+    }
+    print("la data recuper est --------------------------------------------------")
+    print(data)
+
+    return data
+# La fonction test fo All User
+@app.route('/testAllUsers/', methods=['GET'])
+def testAllUsers():
+    headers = flask.request.headers
+    if request.headers.get('Authorization'):
+        if request.headers.get('Authorization').startswith('Bearer'):
+            bearer = headers.get('Authorization')
+            taille = len(bearer.split())
+            if taille == 2:
+                token = bearer.split()[1]
+                print('--------------------le token retourne est--------------------')
+                print(token)
+                return {'message': 'token valid', 'token retourne': token}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+    else:
+        return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+
 # La fonction get_user_by_id
 def get_user_by_id(userId):
     try:
