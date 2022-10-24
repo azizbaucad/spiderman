@@ -264,10 +264,10 @@ def getDoublon():
 
             query = ''' 
                             Select db.service_id, db.created_at::date, db.nom_olt, db.ip_olt, db.vendeur, mt.oltrxpwr, mt.ontrxpwr
-                                From doublons_ftth as db, metrics_ftth as mt
+                                From doublons_ftth as db, metric_seytu_network as mt
                                 where db.service_id = mt.numero 
-                                and db.created_at::date = mt.date
-                                and db.service_id = '{}' 
+                                and db.ip_olt = mt.olt_ip
+                                and db.service_id = '{}'  order by db.created_at::date desc
                         '''.format(numero)
             data_ = pd.read_sql(query, con)
             print(data_)
@@ -474,15 +474,113 @@ def get_token():
     return jsonify({"message": "ok", "codes": 200}, ret), 200
 
 # Test Get User By ID
-@app.route('/testGetUserId/<string:userId>/', methods=['GET'])
-def testGetUserId(userId):
+@app.route('/testGetUserId', methods=['GET'])
+def testGetUserId():
     try:
+        userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
         url = URI_USER + '/' + userId
+        print("----------------le url recuperer est-------------------")
+        print(url)
         donnee = adminToken()
         token_admin = donnee['tokens']['access_token']
         print("---------------le token admin est-----------------")
+        print(token_admin)
+        response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+        status = response.status_code
+        tokens_data = response.json()
+
+        #print(data)
+        # data = {lllououoooukykykykyky
+        #     "enabled": tokens_data['enabled'],
+        #     "id": tokens_data['id'],
+        # }
+        #print("---")
+        return {'message': 'good', 'code': 200,'status status': status, 'token': token_admin}
+        #return {'code':0}
     except:
         print("-----------ERRORR------------------")
+#Fonction de test d'activaton
+@app.route('/users/activation/', methods=['GET'])
+def activation_users():
+    try:
+        headers = flask.request.headers
+        response = get_user_by_id('64b43eff-fcdf-4394-b207-0f067afd7894')
+        # if response.get("status") == 'error':
+        #     return {"message": "l'utilisateur n'est pas trouve", 'code': HTTPStatus.NOT_FOUND}
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {'message': 'token invalid 1'}
+            else:
+                return {'message': 'token invalid 2'}
+        else:
+            return {'message': 'token invalid 3'}
+
+    except :
+        print("-------------ERRORR--------")
+        return {"Good": "response"}
+
+# Fonction permettant de tester l'obtention du token Simple User
+@app.route('/testGetTokenUserAdmin', methods= ['GET'])
+def testGetTokenUserAdmin():
+    url = "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
+    params = {
+        'client_id': 'saytu_keycloak_python',
+        'grant_type': 'client_credentials',
+        'client_secret': '5b00ff07-a482-417d-8aff-0e5d83045078',
+        'username': 'dbm_user',
+        'password': 'Aziz_2030'
+    }
+    response = requests.post(url, params, verify=False)
+    if response.status_code > 200:
+        return {'message': 'Username ou Password Incorrect', 'status': 'error'}
+    tokens_data = response.json()
+    ret = {
+        'tokens': {
+            'access_token': tokens_data['access_token'],
+            'token_type': tokens_data['token_type'],
+        },
+        'status': 'success',
+    }
+    print(response)
+    return ret #jsonify({'message':'ok', "token": response.json()})
+# Fonction permettant de tester l'obtention du token Admin
+@app.route('/testGetTokenUserSimple', methods= ['GET'])
+def testGetTokenUserSimple():
+    url = "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
+    params = {
+        'client_id': 'saytu_keycloak_python',
+        'grant_type': 'password',
+        'client_secret': '5b00ff07-a482-417d-8aff-0e5d83045078',
+        'username': 'aziz',
+        'password': 'test'
+    }
+    x = requests.post(url, params, verify=False)
+    print(x)
+    return jsonify({'message':'ok', "token": x.json()})
+# Fonction de test du get user by ID
+@app.route('/testGetUserByID', methods=['GET'])
+def testGetUserByID():
+    URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
+    userId = '7ba7c558-fb63-4552-94de-012721d5a7cc'
+    url = URI_USER + '/' + userId
+    print('-----------------------le url recuperer est----------------')
+    print(url)
+    donnee = testGetTokenUserAdmin()
+    token_admin = donnee['tokens']['access_token']
+    print('---------------le token Admin recuperer est ---------')
+    print(token_admin)
+    response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+    if response.status_code > 200:
+        return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+    tokens_data = response.json()
+    print("---------------la data recuperer---------------")
+    print(tokens_data)
+    return {'message': 'test', 'status': 'ok', 'code': 200, 'data': tokens_data}
 # La fonction get_user_by_id
 def get_user_by_id(userId):
     try:
