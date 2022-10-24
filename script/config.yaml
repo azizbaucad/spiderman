@@ -16,7 +16,7 @@ CLIENT_ID: saytu_keycloak_python
 CLIENT_SECRET: 5b00ff07-a482-417d-8aff-0e5d83045078
 GRANT_TYPE: client_credentials
 URI_BASE: "https://keycloak-pprod.orange-sonatel.com/auth/"
-URI: "https://keycloak-pprod.orange-sonatel.com/auth/realms/saytu_realm/protocol/openid-connect/token"
+URI: "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
 URI_USER: "https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users"
 URI_ROLES: "https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/roles"
 

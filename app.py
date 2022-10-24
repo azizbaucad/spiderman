@@ -37,6 +37,7 @@ def add_headers(response):
 
     return response
 
+# test de AdminToken
 
 # La fonction adminToken
 def adminToken():
@@ -324,6 +325,22 @@ def tauxOccupation():
     else:
         return "Veullez saisir une date"
 
+#Test de la fonction d'activation
+@app.route('/users/testActivation/<string:userId>/', methods=['GET'])
+def testActivation(userId):
+    try:
+        headers = flask.request.headers
+        reponse = get_user_by_id(userId)
+        if reponse.get("status") == 'error':
+            return {'message': 'Utilisateur Not Found', 'code': HTTPStatus.NOT_FOUND}
+        else:
+            return {'message': 'Good User', 'code': 200}
+        # headerss = flask.request.headers
+        # print("------------------------------Le headerrs est-----------------------")
+        # print(headerss)
+        # return jsonify({"test": headerss})#print(headers)
+    except:
+        print("------------------------------Mauvais  Headers------------------")
 
 #la fonction d'activation de l'utilisateur
 @app.route('/users/enable/<string:userId>/', methods=['PUT'])
@@ -456,7 +473,16 @@ def get_token():
 
     return jsonify({"message": "ok", "codes": 200}, ret), 200
 
-
+# Test Get User By ID
+@app.route('/testGetUserId/<string:userId>/', methods=['GET'])
+def testGetUserId(userId):
+    try:
+        url = URI_USER + '/' + userId
+        donnee = adminToken()
+        token_admin = donnee['tokens']['access_token']
+        print("---------------le token admin est-----------------")
+    except:
+        print("-----------ERRORR------------------")
 # La fonction get_user_by_id
 def get_user_by_id(userId):
     try:
