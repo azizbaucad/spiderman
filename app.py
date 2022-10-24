@@ -524,7 +524,7 @@ def activation_users():
         print("-------------ERRORR--------")
         return {"Good": "response"}
 
-# Fonction permettant de tester l'obtention du token Simple User
+# Fonction permettant de tester l'obtention du to2ken Simple User
 @app.route('/testGetTokenUserAdmin', methods= ['GET'])
 def testGetTokenUserAdmin():
     url = "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
@@ -566,21 +566,42 @@ def testGetTokenUserSimple():
 @app.route('/testGetUserByID', methods=['GET'])
 def testGetUserByID():
     URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
-    userId = '7ba7c558-fb63-4552-94de-012721d5a7cc'
+    #userId = '97a28af5-89ad-445b-87e6-4e83afcab8fe'
+    userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
+    userName = 'aziz'
     url = URI_USER + '/' + userId
+    urls = URI_USER + '?username=' + userName
     print('-----------------------le url recuperer est----------------')
     print(url)
+    donnee = testGetTokenUserAdmin()
+    print('-----------------------le url avec userName recuperer est----------------')
+    print(urls)
     donnee = testGetTokenUserAdmin()
     token_admin = donnee['tokens']['access_token']
     print('---------------le token Admin recuperer est ---------')
     print(token_admin)
     response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
-    if response.status_code > 200:
-        return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+    # if response.status_code > 200:
+    #     return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+    # tokens_data = response.json()
+    status = response.status_code
+    if status > 200:
+        return {'message': 'Erreur', 'status': 'error', 'code': status}
     tokens_data = response.json()
-    print("---------------la data recuperer---------------")
+    print("--------------la reponse renvoye  est-----------")
     print(tokens_data)
-    return {'message': 'test', 'status': 'ok', 'code': 200, 'data': tokens_data}
+    print("---------------le status recuperer---------------")
+    print(status)
+    data = {
+        "enabled": tokens_data['enabled'],
+        "id": tokens_data['id'],
+        "firstName": tokens_data['firstName'],
+        "lastName": tokens_data['lastName'],
+        "username": tokens_data['username'],
+    }
+    response = {'status': 'Success', 'data': data, 'code': HTTPStatus.OK}
+    return response
+    #return {'message': 'test', 'status': status, 'code': 200}
 # La fonction get_user_by_id
 def get_user_by_id(userId):
     try:
