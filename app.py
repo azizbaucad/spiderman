@@ -37,6 +37,7 @@ def add_headers(response):
 
     return response
 
+
 # test de AdminToken
 
 # La fonction adminToken
@@ -133,12 +134,14 @@ def get_test_historique():
         if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
             print(dateFrom)
             print(dateTo)
-        query = "Select numero, count(numero) FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero HAVING COUNT(numero) = {}".format(dateFrom, dateTo, Duree)
+        query = "Select numero, count(numero) FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero HAVING COUNT(numero) = {}".format(
+            dateFrom, dateTo, Duree)
         data_ = pd.read_sql(query, con)
         print(data_)
         res = data_.to_dict(orient='records')
         return res
     return res
+
 
 # Fontion de test des args
 @app.route('/with_parameters')
@@ -147,18 +150,22 @@ def with_parameters():
     age = request.args.get('age')
     return jsonify(message="My name is" + str(name) + "and I am" + str(age))
 
+
 @app.route('/with_url_variables/<string:name>/<int:age>')
 def with_url_variables(name: str, age: int):
     return jsonify(message="My name is" + name + " and I am" + str(age) + "Years old")
+
 
 @app.route('/index/<subject>')
 def subject(subject):
     return "The value is: " + subject
 
+
 @app.route('/posteee/<int:post_id>/<string:test>')
 def show_post(post_id, test):
     # show the post with the given id, the id is an integer
     return f'Post {post_id}, Test' + str(test)
+
 
 @app.route('/test_query')
 def test_query():
@@ -185,7 +192,9 @@ def datebetween(date1, date2):
     date2 = datetime.strptime(date2, "%Y-%m-%d")
     duree = date2 - date1
     return duree
-@app.route('/testdatee', methods=['POST','GET'])
+
+
+@app.route('/testdatee', methods=['POST', 'GET'])
 def testdatee():
     date1 = request.args.get('date1')
     date2 = request.args.get('date2')
@@ -193,7 +202,7 @@ def testdatee():
     print(type(date1))
     print(type(date2))
     print("Date 1 is" + date1 + "Date 2 is" + date2)
-    #date1 = datetime.strptime()
+    # date1 = datetime.strptime()
     date1 = datetime.strptime(date1, '%Y-%m-%d')
     date2 = datetime.strptime(date2, '%Y-%m-%d')
     date1 = date1.date()
@@ -204,9 +213,11 @@ def testdatee():
     delta = date2 - date1
     print("La duree est de :")
     print(delta.days)
-    #print("Date 1 is" + date1 + "Date 2 is" + date2)
+    # print("Date 1 is" + date1 + "Date 2 is" + date2)
     return "print(type(date1)) i "
-@app.route('/datee', methods=['POST','GET'])
+
+
+@app.route('/datee', methods=['POST', 'GET'])
 def get_Date_Diff():
     con = connect()
 
@@ -231,8 +242,8 @@ def get_Date_Diff():
     print("La duree est de")
     print(Duree.days)
     Duree = Duree.days
-    #Duree = request.args.get('Duree')
-    #print("DateFrom is " + dateFrom + "DateTo is " + dateTo + "and Duree is " + Duree)
+    # Duree = request.args.get('Duree')
+    # print("DateFrom is " + dateFrom + "DateTo is " + dateTo + "and Duree is " + Duree)
     print(type(dateFrom))
     print(type(dateTo))
     if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
@@ -245,9 +256,10 @@ def get_Date_Diff():
     res = data_.to_dict(orient='records')
     return res
 
-    #return 'From Date is'+request.args.get('from_date') + ' To Date is ' + request.args.get('to_date')
+    # return 'From Date is'+request.args.get('from_date') + ' To Date is ' + request.args.get('to_date')
 
-#La fonction qui retourne les numeros en doublon
+
+# La fonction qui retourne les numeros en doublon
 @app.route('/doublons', methods=['GET'])
 def getDoublon():
     if request.method == 'GET':
@@ -255,8 +267,8 @@ def getDoublon():
         con = connect()
 
         numero = request.args.get('numero')
-        #print(type(numero))
-        #print("le numero saisi est" + numero)
+        # print(type(numero))
+        # print("le numero saisi est" + numero)
 
         if numero is None or numero == "":
             return getAllDoublon()
@@ -275,19 +287,15 @@ def getDoublon():
             return res
 
 
-
-
-#API pour l'affichage de la dernière date de coupure
+# API pour l'affichage de la dernière date de coupure
 @app.route('/derniereheureCoupure', methods=['GET'])
 def get_Heure_Coupure():
     if request.method == 'GET':
 
-
-
         con = connect()
         numero = request.args.get('numero')
-        #print(type(numero))
-        #print("le numero saisi est" + numero)
+        # print(type(numero))
+        # print("le numero saisi est" + numero)
         if numero is None or numero == "":
             return getDerniereHeureDeCoupure()
         else:
@@ -303,6 +311,7 @@ def get_Heure_Coupure():
             res = data_.to_dict(orient='records')
             return res
 
+
 # La fonction de récupération du taux d'ocuupation
 @app.route('/tauxoccupation', methods=['GET'])
 def tauxOccupation():
@@ -310,8 +319,7 @@ def tauxOccupation():
     dateFrom = request.args.get('dateFrom')
     dateTo = request.args.get('dateTo')
 
-    if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "" :
-
+    if dateFrom is not None and dateFrom != "" and dateTo is not None and dateTo != "":
 
         query = ''' 
                     select slot,  pon, nom_olt,created_at::date, count(distinct service_id) 
@@ -325,7 +333,8 @@ def tauxOccupation():
     else:
         return "Veullez saisir une date"
 
-#Test de la fonction d'activation
+
+# Test de la fonction d'activation
 @app.route('/users/testActivation/<string:userId>/', methods=['GET'])
 def testActivation(userId):
     try:
@@ -342,7 +351,8 @@ def testActivation(userId):
     except:
         print("------------------------------Mauvais  Headers------------------")
 
-#la fonction d'activation de l'utilisateur
+
+# la fonction d'activation de l'utilisateur
 @app.route('/users/enable/<string:userId>/', methods=['PUT'])
 def enable_disable_user(userId):
     try:
@@ -391,7 +401,7 @@ def enable_disable_user(userId):
                 headers = get_keycloak_headers()
                 response = requests.put(url, headers=headers, json=data)
                 if response.status_code > 204:
-                    return {"message": "Erreur", 'status':'error', 'code': response.status_code}
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
 
                 response = jsonify(
                     {'status': 'Success', 'data': 'Utilisateur Active/Desactive Avec success',
@@ -421,6 +431,7 @@ def enable_disable_user(userId):
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
+
 @app.route('/testinfouser', methods=['GET'])
 def testinfouser():
     return get_user_by_id("64b43eff-fcdf-4394-b207-0f067afd7894")
@@ -442,7 +453,7 @@ def hello_world():  # put application's code here
 
 
 @app.route('/auth', methods=['POST'])
-def get_token():
+def GetToken():
     # TODO : Control username et password
     body = request.get_json(force=True)
 
@@ -457,8 +468,20 @@ def get_token():
 
     url = URI
     response = requests.post(url, data=data)
+
     if response.status_code > 200:
-        messageLogging = body['username'] + "a tente de se connecter"
+        messageLogging = body['username'] + " a tenté de se connecter sans success "
+        message_log = {
+            "url.path": request.base_url,
+            "http.request.method": request.method,
+            "client.ip": getIpAdress(),
+            "event.message": messageLogging,
+            "process.id": os.getpid(),
+        }
+        log_app(message_log)
+        print('-----------------------LOG--------------------')
+        print(message_log)
+
         return {"message": "Username ou Password Incorrect", 'code': HTTPStatus.BAD_REQUEST}
 
     tokens_data = response.json()
@@ -469,9 +492,24 @@ def get_token():
             "refresh_token": tokens_data['refresh_token'],
         }
     }
-    messageLogging = body['username'] + "s'est connecté avec success"
 
-    return jsonify({"message": "ok", "codes": 200}, ret), 200
+    messageLogging = body['username'] + " s'est connecté avec success"
+    message_log = {
+        "url.path": request.base_url,
+        "http.request.method": request.method,
+        "client.ip": getIpAdress(),
+        "event.message": messageLogging,
+        "process.id": os.getpid(),
+    }
+    log_app(message_log)
+
+    print('-----------------------LOG--------------------')
+    print(message_log)
+
+    return jsonify(ret), 200
+
+    # return jsonify({"message": "ok", "codes": 200}, ret), 200
+
 
 # Test Get User By ID
 @app.route('/testGetUserId', methods=['GET'])
@@ -489,17 +527,19 @@ def testGetUserId():
         status = response.status_code
         tokens_data = response.json()
 
-        #print(data)
+        # print(data)
         # data = {lllououoooukykykykyky
         #     "enabled": tokens_data['enabled'],
         #     "id": tokens_data['id'],
         # }
-        #print("---")
-        return {'message': 'good', 'code': 200,'status status': status, 'token': token_admin}
-        #return {'code':0}
+        # print("---")
+        return {'message': 'good', 'code': 200, 'status status': status, 'token': token_admin}
+        # return {'code':0}
     except:
         print("-----------ERRORR------------------")
-#Fonction de test d'activaton
+
+
+# Fonction de test d'activaton
 @app.route('/users/activation/', methods=['GET'])
 def activation_users():
     try:
@@ -520,20 +560,21 @@ def activation_users():
         else:
             return {'message': 'token invalid 3'}
 
-    except :
+    except:
         print("-------------ERRORR--------")
         return {"Good": "response"}
 
+
 # Fonction permettant de tester l'obtention du to2ken Simple User
-@app.route('/testGetTokenUserAdmin', methods= ['GET'])
+@app.route('/testGetTokenUserAdmin', methods=['GET'])
 def testGetTokenUserAdmin():
     url = "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
     params = {
         'client_id': 'saytu_keycloak_python',
         'grant_type': 'client_credentials',
         'client_secret': '5b00ff07-a482-417d-8aff-0e5d83045078',
-        'username': 'dbm_user',
-        'password': 'Aziz_2030'
+        # 'username': 'dbm_user',
+        # 'password': 'Aziz_2030'
     }
     response = requests.post(url, params, verify=False)
     if response.status_code > 200:
@@ -547,9 +588,11 @@ def testGetTokenUserAdmin():
         'status': 'success',
     }
     print(response)
-    return ret #jsonify({'message':'ok', "token": response.json()})
+    return ret  # jsonify({'message':'ok', "token": response.json()})
+
+
 # Fonction permettant de tester l'obtention du token Admin
-@app.route('/testGetTokenUserSimple', methods= ['GET'])
+@app.route('/testGetTokenUserSimple', methods=['GET'])
 def testGetTokenUserSimple():
     url = "https://keycloak-pprod.orange-sonatel.com/auth/realms/Saytu_realm/protocol/openid-connect/token"
     params = {
@@ -561,88 +604,234 @@ def testGetTokenUserSimple():
     }
     x = requests.post(url, params, verify=False)
     print(x)
-    return jsonify({'message':'ok', "token": x.json()})
+    return jsonify({'message': 'ok', "token": x.json()})
+
+
 # Fonction de test du get user by ID
 @app.route('/testGetUserByID', methods=['GET'])
-def testGetUserByID():
-    URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
-    #userId = '97a28af5-89ad-445b-87e6-4e83afcab8fe'
-    userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
-    userName = 'aziz'
-    url = URI_USER + '/' + userId
-    urls = URI_USER + '?username=' + userName
-    print('-----------------------le url recuperer est----------------')
-    print(url)
-    donnee = testGetTokenUserAdmin()
-    print('-----------------------le url avec userName recuperer est----------------')
-    print(urls)
-    donnee = testGetTokenUserAdmin()
-    token_admin = donnee['tokens']['access_token']
-    print('---------------le token Admin recuperer est ---------')
-    print(token_admin)
-    response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
-    # if response.status_code > 200:
-    #     return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
-    # tokens_data = response.json()
-    status = response.status_code
-    if status > 200:
-        return {'message': 'Erreur', 'status': 'error', 'code': status}
-    tokens_data = response.json()
-    print("--------------la reponse renvoye  est-----------")
-    print(tokens_data)
-    print("---------------le status recuperer---------------")
-    print(status)
-    data = {
-        "enabled": tokens_data['enabled'],
-        "id": tokens_data['id'],
-        "firstName": tokens_data['firstName'],
-        "lastName": tokens_data['lastName'],
-        "username": tokens_data['username'],
-    }
-    response = {'status': 'Success', 'data': data, 'code': HTTPStatus.OK}
-    return response
-    #return {'message': 'test', 'status': status, 'code': 200}
+def GetUserByID(userId):
+    try:
+
+        URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
+        # userId = '97a28af5-89ad-445b-87e6-4e83afcab8fe'
+        # userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
+        # userName = 'aziz'
+        url = URI_USER + '/' + userId
+        # urls = URI_USER + '?username=' + userName
+        print('-----------------------le url recuperer est----------------')
+        print(url)
+        donnee = testGetTokenUserAdmin()
+        print('-----------------------le url avec userName recuperer est----------------')
+        # print(urls)
+        donnee = testGetTokenUserAdmin()
+        token_admin = donnee['tokens']['access_token']
+        print('---------------le token Admin recuperer est ---------')
+        print(token_admin)
+        response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+        # if response.status_code > 200:
+        #     return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+        # tokens_data = response.json()
+        status = response.status_code
+        if status > 200:
+            return {'message': 'Erreur', 'status': 'error', 'code': status}
+        tokens_data = response.json()
+        print("--------------la reponse renvoye  est-----------")
+        print(tokens_data)
+        print("---------------le status recuperer---------------")
+        print(status)
+        data = {
+            "enabled": tokens_data['enabled'],
+            "id": tokens_data['id'],
+            "firstName": tokens_data['firstName'],
+            "lastName": tokens_data['lastName'],
+            "username": tokens_data['username'],
+        }
+        response = {'status': 'Success', 'data': data, 'code': HTTPStatus.OK}
+        return response
+        # return {'message': 'test', 'status': status, 'code': 200}
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+        # Do Something
+
 
 # la fonction permettant d'avoir tous les info user
 @app.route('/testGetInfoUser', methods=['GET'])
-def testGetInfoUser():
-    URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
-    userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
-    url = URI_USER + '/' + userId + '/role-mappings/realm'
-    donnee = testGetTokenUserAdmin()
-    token_admin = donnee['tokens']['access_token']
-    response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
-    if response.status_code > 200:
-        return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
-    tokens_data = response.json()
-    data = {
-        "name": tokens_data[0]['name'],
-        "id": tokens_data[0]['id']
+def GetInfoUser(userId):
+    try:
 
-    }
-    print("la data recuper est --------------------------------------------------")
-    print(data)
+        URI_USER = 'https://keycloak-pprod.orange-sonatel.com/auth/admin/realms/saytu_realm/users'
+        # userId = '64b43eff-fcdf-4394-b207-0f067afd7894'
+        url = URI_USER + '/' + userId + '/role-mappings/realm'
+        donnee = testGetTokenUserAdmin()
+        token_admin = donnee['tokens']['access_token']
+        response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+        if response.status_code > 200:
+            return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+        tokens_data = response.json()
+        data = {
+            "name": tokens_data[0]['name'],
+            "id": tokens_data[0]['id']
 
-    return data
-# La fonction test fo All User
-@app.route('/testAllUsers/', methods=['GET'])
-def testAllUsers():
-    headers = flask.request.headers
-    if request.headers.get('Authorization'):
-        if request.headers.get('Authorization').startswith('Bearer'):
-            bearer = headers.get('Authorization')
-            taille = len(bearer.split())
-            if taille == 2:
-                token = bearer.split()[1]
-                print('--------------------le token retourne est--------------------')
-                print(token)
-                return {'message': 'token valid', 'token retourne': token}
+        }
+        print("la data recuper est --------------------------------------------------")
+        print(data)
+
+        return data
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+
+
+# API pour consulter la liste des utilisateurs
+@app.route('/users/', methods=['GET'])
+def GetAllUsers():
+    try:
+
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                    print('--------------------le token retourne est--------------------')
+                    print(token)
+                    data = {'message': 'token valid', 'token retourne': token}
+                    print(data)
+                    # return data
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
             else:
                 return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
         else:
             return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-    else:
-        return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data = decodeToken(token)
+        print('--------------------------la data renvoye est-------------------')
+        print(data)
+        code = data['code']
+        name = data['data']['name']
+
+        if code == 200:
+            data = {"code": code, "name": name, "data": data}
+            print(data)
+            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':
+                print('-------------le role est ---------------')
+                print(getRoleToken(token))
+
+                url = URI_USER + '?max=1000'
+                donnee = testGetTokenUserAdmin()
+                token_admin = donnee['tokens']['access_token']
+                response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+                if response.status_code > 200:
+                    return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+                tokens_data = response.json()
+                result = []
+                for i in range(len(tokens_data)):
+                    data = {
+                        'enabled': tokens_data[i]['enabled'],
+                        'id': tokens_data[i]['id'],
+                        'firstName': tokens_data[i]['firstName'],
+                        'lastName': tokens_data[i]['lastName'],
+                        'username': tokens_data[i]['username'],
+                        'profil': GetInfoUser(tokens_data[i]['id']),
+
+                    }
+                    result.append(data)
+                response = jsonify({'status': 'Success', 'data': result, 'code': HTTPStatus.OK})
+                messageLogging = name + " a consulté la liste des utilisateurs "
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+
+                }
+                log_app(message_log)
+                return add_headers(response)
+            messageLogging = name + "a tenté de consulter la liste des utilisateurs"
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+
+            return {'message': 'invalid user', 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+
+            return decodeToken(token)
+
+            # return data
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+
+# API permettant l'obtention d'un seul user
+@app.route('/users/<string:userId>/', methods=['GET'])
+def GetOnlyUser(userId):
+    try:
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data = decodeToken(token)
+        code = data['code']
+        name = data['data']['name']
+        donneerec = {'code': code, 'name': name}
+        print('-------------------la data recuperer est-------------')
+        print(donneerec)
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':
+
+                url = URI_USER + '/' + userId
+                donnee = testGetTokenUserAdmin()
+                token_admin = donnee['tokens']['access_token']
+                response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
+                if response.status_code > 200:
+                    return {'message': 'Erreur', 'status': 'error', 'code': response.status_code}
+                tokens_data = response.json()
+
+                response = jsonify({'status': 'Success', 'data': tokens_data, 'code': HTTPStatus.OK})
+                GetUserByID(userId)
+
+                messageLogging = name + " a consulté l'utilisateur " + GetUserByID(userId)['data']['username']
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+
+                return add_headers(response)
+            messageLogging = name + " a tenté de consulter l'utilisateur " + GetUserByID(userId)['data']['username']
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+            return {"message": "invalid user", "code": HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+
 
 
 # La fonction get_user_by_id
@@ -687,110 +876,6 @@ def get_info_user(userId):
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
-
-# api de recupération des users
-
-@app.route('/users/', methods=['GET'])
-def all_users():
-    try:
-        headers = flask.request.headers
-        bearer = headers.get('Authorization')
-        print("-------------------------------------Bearer---------------------------------")
-        print(bearer)
-
-        if request.headers.get('Authorization'):
-            print("----------------------------------Authorization--------------------")
-            if request.headers.get('Authorization').startswith('Bearer'):
-                print("-------------------------------Le Bearer est----------------------")
-                bearer = headers.get('Authorization')
-                #print(bearer)
-                print("-------------------------------La taille est-----------------------")
-                taille = len(bearer.split())
-                print(taille)
-                if taille == 2:
-                    token = bearer.split()[1]
-                    print("---------------------------le token est-------------------------")
-                    #print(token)
-        #         else:
-        #             return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-        #     else:
-        #         return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-        # else:
-        #     return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-        print("--------------------------------------headers--------------------------")
-        #print(headers)
-        data = decodeToken(token)
-        print("--------------------------------------------------------------------token-----------------------------------------------------------------------")
-        print(data)
-        code = data['code']
-        print("--------------------------------------------------------------------code-------------------------------------------------------------------------")
-        print(code)
-        #name = "test"
-        name = data['data']['name'] #['preferred_username']
-        print("---------------------------------------------------------------------name-------------------------------------------------------------------------")
-        print(name)
-        if code == 200:
-            # Mettre ici les autorisations if getRoleToken(token) == 'admin' or  getRoleToken(token) == 'sf': #getRoleToken(token) == 'admin' or
-
-            url = URI_USER + '?max=1000'
-            donnee = adminToken()
-            token_admin = donnee['tokens']['access_token']
-            print("---------------------------Le token admin est-------------------------")
-            print(token_admin)
-            response = requests.request('GET', url, headers = {'Authorization': 'Bearer' + token_admin})
-            print("-----------------------------------la repone autorization et Bearer est------------")
-            #response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
-            # if response.status_code > 200:
-            #     print(token_admin)
-            #     return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
-            tokens_data = response.json()
-            print("------------------------------le tokens data à afficher est-----------------------")
-            print(tokens_data)
-            # return tokens_data[0]
-            result = []
-            # for i in range(len(tokens_data)):
-            #     print(tokens_data)
-            #     data = {
-            #         #"enabled": tokens_data[i]['enabled'],
-            #         #"id": tokens_data[i]['id'],
-            #         "firstName": tokens_data[i]['firstName'].split(' ', 1)[0],
-            #         "lastName": tokens_data[i]['lastName'].upper(),
-            #         "username": tokens_data[i]['username'],
-            #         #"profil": get_info_user(tokens_data[i]['id']),
-            #     }
-            #     result.append(data)
-            #return result
-            response = jsonify({'status': 'Success', 'data': result, 'code': HTTPStatus.OK})
-            messageLogging = name + " a consulté la liste des utilisateurs "
-            message_log = {
-                "url.path": request.base_url,
-                "http.request.method": request.method,
-                "client.ip": getIpAdress(),
-                "event.message": messageLogging,
-                "process.id": os.getpid(),
-            }
-            print('------------------------------------------------------message du log------------------------------------------------------------------------------------')
-            log_app(message_log)
-            # logger_user(messageLogging, LOG_AUTHENTIFICATION)
-            #return add_headers(response)
-            messageLogging = name + " a tenté de consulter la liste des utilisateurs "
-            message_log = {
-                "url.path": request.base_url,
-                "http.request.method": request.method,
-                "client.ip": getIpAdress(),
-                "event.message": messageLogging,
-                "process.id": os.getpid(),
-            }
-            print('--------------------------------------------------------------le message du log--------------------------------------------------------------------')
-            log_app(message_log)
-            # logger_user(messageLogging, LOG_AUTHENTIFICATION)
-            #return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
-            return add_headers(response)
-            #return result
-        else:
-            return decodeToken(token)
-    except ValueError:
-        return jsonify({'status': 'Error ', 'error': ValueError})
 
 
 # Recuperation des variables
