@@ -1074,8 +1074,76 @@ def DeleteUser(userId):
         return jsonify({'status': 'Error', 'error': ValueError})
 
 # API permettant de visualiser les profils des utilisateurs
-#@app.route('/profils/', methods=['GET'])
-#def all_r
+@app.route('/profils/', methods=['GET'])
+def AllProfils():
+    try:
+
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data = decodeToken(token)
+        code = data['code']
+        name = data['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':
+
+                url = URI_ROLES
+                donnee = testGetTokenUserAdmin()
+                token_admin = donnee['tokens']["access_token"]
+                response = requests.get(url,
+                                        headers={'Authorization': 'Bearer {}'.format(token_admin)})
+                if response.status_code > 200:
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                tokens_data = response.json()
+                # return jsonify(tokens_data)
+                # input_dict = json.loads(tokens_data)
+
+                # Filter python objects with list comprehensions
+                output_dict = [x for x in tokens_data if
+                               x['name'] == 'admin' or x['name'] == 'profil_1' or x[
+                                   'name'] == 'profil_3' or x['name'] == 'sf' or x['name'] == 'profil_4']
+
+                # Transform python object back into json
+                # output_json = json.dumps(output_dict)
+
+                response = jsonify({'status': 'Success', 'data': output_dict, 'code': HTTPStatus.OK})
+                messageLogging = name + " a consulté la liste des profils "
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+                # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+                return add_headers(response)
+            messageLogging = name + " a tenté de consulter la liste des profils "
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+            # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+    except ValueError:
+        return jsonify({'status': 'Error ', 'error': ValueError})
 # API permettant de creer le profil d'un utilisateur
 @app.route('/users/profils/<string:userId>/', methods=['POST'])
 def UserRole(userId):
