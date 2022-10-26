@@ -28,6 +28,24 @@ def cfg():
         return cfg
 
 
+# Recuperation des variables
+CLIENT_ID = cfg()['CLIENT_ID']
+CLIENT_SECRET = cfg()['CLIENT_SECRET']
+GRANT_TYPE = cfg()['GRANT_TYPE']
+# HOST = cfg()['CLIENT_ID']
+# PORT = sysEnvOrDefault("PORT", app.config['PORT'])
+URI = cfg()['URI']
+URI_USER = cfg()['URI_USER']
+URI_ROLES = cfg()['URI_ROLES']
+REALM = cfg()['REALM']
+URI_BASE = cfg()['URI_BASE']
+
+print(
+    "CLIENT_ID" + CLIENT_ID + "CLIENT_SECRET" + CLIENT_SECRET + "GRANT_TYPE" + GRANT_TYPE + "URI" + URI + "URI_USER" + URI_USER + "URI_ROLES" + URI_ROLES + "REALM" + REALM + "URI_BASE" + URI_BASE)
+field = "aziz"
+print(f"error() : Field {field} is missing", 400)
+
+
 #  Les fonctions utiles
 def add_headers(response):
     response.headers.add('Content-Type', 'application/json')
@@ -353,103 +371,23 @@ def testActivation(userId):
 
 
 # la fonction d'activation de l'utilisateur
-@app.route('/users/enable/<string:userId>/', methods=['PUT'])
-def enable_disable_user(userId):
-    try:
-        headers = flask.request.headers
-        response = get_user_by_id(userId)
-
-        if response.get("status") == 'error':
-            print(response)
-            print(get_user_by_id(userId))
-            return {"message": "User Not Found", 'code': HTTPStatus.NOT_FOUND}
-
-        if request.headers.get('Authorization'):
-            if request.headers.get('Authorization').startswith('Bearer'):
-                bearer = headers.get('Authorization')
-                taille = len(bearer.split())
-                if taille == 2:
-                    token = bearer.split()[1]
-                    print(token)
-                else:
-                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-            else:
-                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-        else:
-            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
-
-        data_token = decodeToken(token)
-        code = data_token['code']
-        name = data_token['data']['name']
-        print(code)
-        print(name)
-        if code == 200:
-            if getRoleToken(token) == 'admin':
-                url = URI_USER + '/' + userId
-                body = request.get_json()
-                for field in ['enabled']:
-                    if field not in body:
-                        return error(f"Field {field} is missing!"), 400
-
-                data = {
-                    "enabled": not body['enabled'],
-                }
-
-                # return data
-                donnee = adminToken()
-                token_admin = donnee['tokens']["access_token"]
-                headers = get_keycloak_headers()
-                response = requests.put(url, headers=headers, json=data)
-                if response.status_code > 204:
-                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
-
-                response = jsonify(
-                    {'status': 'Success', 'data': 'Utilisateur Active/Desactive Avec success',
-                     'code': HTTPStatus.OK}
-                )
-                if not body['enabled'] == True:
-                    print('ok')
-                    messageLogging = name + "a active le utilisateur " + get_user_by_id(userId)['data']['username']
-                else:
-                    print('ok')
-                    messageLogging = name + " a desactive le utilisateur" + get_user_by_id(userId)['data']['username']
-
-                message_log = {
-                    "url.path": request.base_url,
-                    "http.request.method": request.method,
-                    "client.ip": getIpAdress(),
-                    "event.message": messageLogging,
-                    "process.id": os.getpid(),
-                }
-                log_app(message_log)
-                return add_headers(response)
-            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
-        else:
-            return decodeToken(token)
-
-
-    except ValueError:
-        return jsonify({'status': 'Error', 'error': ValueError})
-
-
-@app.route('/testinfouser', methods=['GET'])
-def testinfouser():
-    return get_user_by_id("64b43eff-fcdf-4394-b207-0f067afd7894")
 
 
 # creation de la fonction get_keycloak_headers
-def get_keycloak_headers():
-    donnee = adminToken()
-    token_admin = donnee['tokens']['access_token']
-    return {
-        'Authorization': 'Bearer' + token_admin,
-        'Content-type': 'application/json'
-    }
 
 
 @app.route('/')
 def hello_world():  # put application's code here
     return 'Hello World! WELCOME TO Saytu Network Backend'
+
+
+def get_keycloak_headers():
+    donnee = testGetTokenUserAdmin()
+    token_admin = donnee['tokens']['access_token']
+    return {
+        'Authorization': 'Bearer ' + token_admin,
+        'Content-Type': 'application/json'
+    }
 
 
 @app.route('/auth', methods=['POST'])
@@ -768,6 +706,7 @@ def GetAllUsers():
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
+
 # API permettant l'obtention d'un seul user
 @app.route('/users/<string:userId>/', methods=['GET'])
 def GetOnlyUser(userId):
@@ -833,6 +772,351 @@ def GetOnlyUser(userId):
         return jsonify({'status': 'Error', 'error': ValueError})
 
 
+# API permettant de creer un utitlisateur
+@app.route('/users', methods=['POST'])
+def CreateUser():
+    try:
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data_token = decodeToken(token)
+        code = data_token['code']
+        name = data_token['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(
+                    token) == 'sf':  # ceci est un test : les roles de creation des users doivent etre établis par la matrice de reponsabilite
+
+                url = URI_USER
+
+                body = request.get_json()
+                # for field in ['firstName', 'lastName', 'username', 'password']:
+                #     if field not in body:
+                #         return error(f"Field {field} is missing!"), 400
+
+                data = {
+                    "firstName": body['firstName'],
+                    "lastName": body['lastName'],
+                    "enabled": "true",
+                    "username": body['username'],
+                    "credentials": [
+                        {
+                            "type": "password",
+                            "value": body['password'],
+                            "temporary": False
+                        }
+                    ]
+                }
+
+                # return data
+
+                donnee = testGetTokenUserAdmin()
+                headers = get_keycloak_headers()
+                response = requests.post(url, headers=headers, json=data)
+                if response.status_code == 409:
+                    return {"message": "Le nom de l'utilisateur existe Déjà", 'status': 'error',
+                            'code': response.status_code}
+                if response.status_code > 201:
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                response = jsonify({'status': 'Success', 'data': 'Utilisateur Créé avec succès', 'code': HTTPStatus.OK})
+                messageLogging = name + " a cree l'utilisateur " + body['firstName'] + ' ' + body[
+                    'lastName'] + '' + ' de username ' + body['username']
+                # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+                return add_headers(response)
+            # messageLogging = name + " a tenté de creer l'utilisateur " + body['firstName'] + ' ' + body[
+            #         'lastName'] + '' + ' de username' + body['username']
+            # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+    except ValueError:
+        return jsonify({'status': 'Error ', 'error': ValueError})
+
+
+# API permettant de modifier les params d'un utilisateur
+@app.route('/users/<string:userId>/', methods=['PUT'])
+def UpdateUser(userId):
+    try:
+        headers = flask.request.headers
+        reponse = GetUserByID(userId)
+        prenom = reponse.get("data")["firstName"]
+        nom = reponse.get("data")["lastName"]
+        login = reponse.get("data")["username"]
+
+        if reponse.get("status") == 'error':
+            return {"message": "User Not Found", 'code': HTTPStatus.NOT_FOUND}
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data_token = decodeToken(token)
+        code = data_token['code']
+        name = data_token['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(
+                    token) == 'sf':  # ceci est un test Ne doit posseder que le role admin
+                url = URI_USER + '/' + userId
+
+                body = request.get_json()
+                # TODO : les controles doivent etre faites ici : firstName, lastName ...
+                data = {
+                    "firstName": body['firstName'],
+                    "lastName": body['lastName'],
+                    # "enabled": body['enabled'],
+                    "username": body['username'],
+
+                    "credentials": [
+                        {
+                            "type": "password",
+                            "value": body['password'],
+                            "temporary": False
+                        }
+                    ]
+                }
+
+                donnee = testGetTokenUserAdmin()
+                token_admin = donnee['tokens']["access_token"]
+                headers = get_keycloak_headers()
+                response = requests.put(url, headers=headers, json=data)
+                if response.status_code > 204:
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                response = jsonify(
+                    {'status': 'Success', 'data': 'Utilisateur modifie avec success', 'code': HTTPStatus.OK})
+                messageLogging = name + " a modifie l'utilisateur " + prenom + ' ' + nom + '' + ' de username ' + login + " en " + \
+                                 body['firstName'] + ' ' + body['lastName'] + '' + ' de username ' + body['username']
+
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+
+                return add_headers(response)
+            messageLogging = name + " a tenté de modifier l'utilisateur " + GetUserByID(userId)['data']['username']
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+
+
+# API permettant d'activer l'utilisateur
+@app.route('/users/enable/<string:userId>/', methods=['PUT'])
+def EnableDisableUser(userId):
+    try:
+        headers = flask.request.headers
+        reponse = GetUserByID(userId)
+
+        if reponse.get("status") == 'error':
+            return {"message": "User Not Found", 'code': HTTPStatus.NOT_FOUND}
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data_token = decodeToken(token)
+        code = data_token['code']
+        name = data_token['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':  # Le sf est à ommettre , ceci est un test
+                url = URI_USER + '/' + userId
+                body = request.get_json()
+
+                data = {
+                    "enabled": not body['enabled'],
+                }
+
+                donnee = testGetTokenUserAdmin()
+                token_admin = donnee['tokens']["access_token"]
+                headers = get_keycloak_headers()
+                response = requests.put(url, headers=headers, json=data)
+
+                if response.status_code > 204:
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                response = jsonify(
+                    {'status': 'Success', 'data': 'Utilisateur Activé/Desactivé avec success', 'code': HTTPStatus.OK})
+                if not body['enabled'] == True:
+                    print('ok')
+                    messageLogging = name + " a désactivé l'utilisateur " + GetUserByID(userId)['data']['username']
+                else:
+                    print('ok')
+                    messageLogging = name + " a activé l'utilisateur " + GetUserByID(userId)['data']['username']
+
+
+                message_log={
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+                return add_headers(response)
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+
+
+
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+
+# API permettant de supprimer un utilisateur
+@app.route('/users/<string:userId>/', methods=['DELETE'])
+def DeleteUser(userId):
+    try:
+        headers = flask.request.headers
+        reponse = GetUserByID(userId)
+        if reponse.get("status") == 'error':
+            return {"message": "User Not Found", 'code': HTTPStatus.NOT_FOUND}
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data_token = decodeToken(token)
+        code = data_token['code']
+        name = data_token['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf': # sf n'est pas autorisé seull admin doit pouvoir faire cette demande
+
+                url = URI_USER + '/' + userId
+                donnee = testGetTokenUserAdmin()
+                token_admin = donnee['tokens']["access_token"]
+                headers = get_keycloak_headers()
+                messageLogging = name + " a supprimé l'utilisateur " + GetUserByID(userId)['data']['username']
+                response = requests.delete(url, headers=headers)
+
+                if response.status_code > 204:
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+
+                response = jsonify({'status': 'Success', 'data': 'Utilisateur supprimé avec success', 'code': HTTPStatus.OK})
+
+                return add_headers(response)
+            messageLogging = name + " a tenté de supprimer l'utilisateur " + GetUserByID(userId)['data']['username']
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+    except ValueError:
+        return jsonify({'status': 'Error', 'error': ValueError})
+
+# API permettant de visualiser les profils des utilisateurs
+#@app.route('/profils/', methods=['GET'])
+#def all_r
+# API permettant de creer le profil d'un utilisateur
+@app.route('/users/profils/<string:userId>/', methods=['POST'])
+def UserRole(userId):
+    try:
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data = decodeToken(token)
+        code = data['code']
+        name = data['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(
+                    token) == 'sf':  # le role sf est un test ici, seul l'admin a le droit de crer des profils
+                body = request.get_json()
+                result = {
+                    "name": body["name"],
+                    "id": body["id"],
+                }
+                print('------------ le res renvoye est----------')
+                print(result)
+                data = [result]
+                url = URI_USER + '/' + userId + '/role-mappings/realm'
+                headers = get_keycloak_headers()
+                # TODO : appele la fonction deleteProfilUser
+
+
+
+    except ValueError:
+        print(ValueError)
+
 
 # La fonction get_user_by_id
 def get_user_by_id(userId):
@@ -876,24 +1160,6 @@ def get_info_user(userId):
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
-
-
-# Recuperation des variables
-CLIENT_ID = cfg()['CLIENT_ID']
-CLIENT_SECRET = cfg()['CLIENT_SECRET']
-GRANT_TYPE = cfg()['GRANT_TYPE']
-# HOST = cfg()['CLIENT_ID']
-# PORT = sysEnvOrDefault("PORT", app.config['PORT'])
-URI = cfg()['URI']
-URI_USER = cfg()['URI_USER']
-URI_ROLES = cfg()['URI_ROLES']
-REALM = cfg()['REALM']
-URI_BASE = cfg()['URI_BASE']
-
-print(
-    "CLIENT_ID" + CLIENT_ID + "CLIENT_SECRET" + CLIENT_SECRET + "GRANT_TYPE" + GRANT_TYPE + "URI" + URI + "URI_USER" + URI_USER + "URI_ROLES" + URI_ROLES + "REALM" + REALM + "URI_BASE" + URI_BASE)
-field = "aziz"
-print(f"error() : Field {field} is missing", 400)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
