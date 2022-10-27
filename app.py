@@ -1144,7 +1144,70 @@ def AllProfils():
             return decodeToken(token)
     except ValueError:
         return jsonify({'status': 'Error ', 'error': ValueError})
+
 # API permettant de creer le profil d'un utilisateur
+@app.route('/profils/', methods=['POST'])
+def CreateProfils():
+    try:
+
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data = decodeToken(token)
+        code = data['code']
+        name = data['data']['name']
+        if code == 200:
+            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf':
+
+                body = request.get_json()
+                # TODO : a mettre les restrictions sur name
+
+                data = {
+                    "name": body["name"],
+                    "composite": False,
+                    "clientRole": False,
+                    "containerId": "Saytu_realm"
+                }
+                url = URI_ROLES
+                headers = get_keycloak_headers()
+                response = requests.post(url, headers=headers, json=data)
+                if response.status_code > 201:
+                    return {"message": "Erreur", 'status': 'error', 'code': response.status_code}
+                tokens_data = response.json()
+                # return jsonify(tokens_data)
+
+                response = jsonify({'status': 'Success', 'data': tokens_data, 'code': HTTPStatus.OK})
+                messageLogging = name + " a cree le profil suivant " + body["name"]
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+                # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+                return add_headers(response)
+            # messageLogging = name + " a de cree le profil suivant "
+            # logger_user(messageLogging, LOG_AUTHENTIFICATION)
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
+    except ValueError:
+        return jsonify({'status': 'Error ', 'error': ValueError})
+
+
 @app.route('/users/profils/<string:userId>/', methods=['POST'])
 def UserRole(userId):
     try:
@@ -1171,7 +1234,7 @@ def UserRole(userId):
                 body = request.get_json()
                 result = {
                     "name": body["name"],
-                    "id": body["id"],
+                    #"id": body["id"],
                 }
                 print('------------ le res renvoye est----------')
                 print(result)
@@ -1179,11 +1242,98 @@ def UserRole(userId):
                 url = URI_USER + '/' + userId + '/role-mappings/realm'
                 headers = get_keycloak_headers()
                 # TODO : appele la fonction deleteProfilUser
+                DeleteProfilUser(userId)
+                response = requests.post(url, headers=headers, json=data)
+                if response.status_code > 204:
+                    return {"message": "Erreur", 'status': response.json(), 'code': response.status_code}
+                response = jsonify({'status': 'Success', 'data': 'Profil attribue avec success', 'code': HTTPStatus.OK})
+                messageLogging = name + " a modifie le profil " + body["old_profil"] + " de l'utilisateur " + \
+                                  GetUserByID(userId)['data']['username'] + ' en profil ' + body['name']
 
+                message_log = {
+                    "url.path": request.base_url,
+                    "http.request.method": request.method,
+                    "client.ip": getIpAdress(),
+                    "event.message": messageLogging,
+                    "process.id": os.getpid(),
+                }
+                log_app(message_log)
+                return add_headers(response)
 
+            messageLogging = name + " a tenté de modifier l'utilisateur " + GetUserByID(userId)['data']['username']
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+
+            return {"message": "invalid user", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return decodeToken(token)
 
     except ValueError:
-        print(ValueError)
+        return jsonify({'status': 'Error', 'error': ValueError})
+
+# API permettant de se déconnecter
+@app.route('/logout/', methods=['GET'])
+def logout():
+    try:
+        headers = flask.request.headers
+        if request.headers.get('Authorization'):
+            if request.headers.get('Authorization').startswith('Bearer'):
+                bearer = headers.get('Authorization')
+                taille = len(bearer.split())
+                if taille == 2:
+                    token = bearer.split()[1]
+                else:
+                    return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+            else:
+                return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+        else:
+            return {"message": "invalid token", 'code': HTTPStatus.UNAUTHORIZED}
+
+        data = decodeToken(token)
+        code = data['code']
+        name = data['data']['name']
+        if code == 200:
+
+            messageLogging = name  +  " s'est deconnecté "
+            message_log = {
+                "url.path": request.base_url,
+                "http.request.method": request.method,
+                "client.ip": getIpAdress(),
+                "event.message": messageLogging,
+                "process.id": os.getpid(),
+            }
+            log_app(message_log)
+            response = jsonify({'status': 'Success', 'data': 'Logout', 'code': HTTPStatus.OK})
+            return add_headers(response)
+        else:
+            return decodeToken(token)
+
+    except ValueError:
+        return jsonify({'status': 'Error ', 'error': ValueError})
+
+# fonction DeleteProfilUser
+def DeleteProfilUser(userId):
+    url = URI_USER + '/' + userId + '/role-mappings/realm'
+    donnee = testGetTokenUserAdmin()
+    token_admin = donnee['tokens']["access_token"]
+    response = requests.get(url, headers={'Authorization': 'Bearer {}' .format(token_admin)})
+    for role in response.json():
+        if (role.get('name') != 'offline_access' and role.get('name') != 'default-roles-saytu_realm' and role.get('name') != 'uma_authorization'):
+            result = {
+                "name": role.get('name'),
+                "id": role.get('id'),
+            }
+
+            data = [result]
+            url = URI_USER + '/' + userId + '/role-mappings/realm'
+            headers = get_keycloak_headers()
+            reponse = requests.delete(url, headers=headers, json=data)
 
 
 # La fonction get_user_by_id
