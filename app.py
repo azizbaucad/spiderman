@@ -378,7 +378,7 @@ def testActivation(userId):
 
 @app.route('/')
 def hello_world():  # put application's code here
-    return 'Hello World! WELCOME TO Saytu Network Backend'
+    return 'WELCOME TO Saytu Network Backend'
 
 
 def get_keycloak_headers():
