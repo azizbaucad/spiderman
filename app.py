@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify, Config
+#from psycopg2 import cursor
 from script.function import *
 from script.function_post import *
 import yact
 import requests
 import flask
+import psycopg2
 from flask_cors import CORS
 import pandas as pd
 from datetime import datetime
@@ -1317,6 +1319,61 @@ def logout():
     except ValueError:
         return jsonify({'status': 'Error ', 'error': ValueError})
 
+# API permettant de faire l'historisation
+@app.route('/historiqueinventaire', methods=['GET'])
+def HistoryInventary():
+    con = connect()
+    cursor = con.cursor()
+    query = '''
+                select   pon, slot, nom_olt,  count(distinct service_id) as NombreDeNumero 
+                         from inventaireglobal_ftth group by  nom_olt, pon, slot 
+            '''
+    data_ = pd.read_sql(query, con)
+    print('------------------Le dataFrame renvoyé est------------------------')
+    #print(data_)
+    my_dict = data_.to_dict(orient='records')
+    df = pd.DataFrame(data=my_dict)
+    i=0
+    for row in df.itertuples():
+        #print(row)
+        cursor.execute(
+            ''' 
+                INSERT INTO inventaireglobalhistory_ftth (pon, slot, nom_olt, nombre_de_numero)
+                                                         VALUES (%s, %s, %s, %s)  ''',
+                                                        (row.pon, row.slot, row.nom_olt, row.nombredenumero),        
+        )
+        con.commit()
+        print(i)
+        i = i + 1
+        print("Inserted is running ..........................")
+    print("Inserted")
+    #print(row.pon)
+    #print('----------------remplissage de la table-------------------')
+    #df.to_sql(con=connect, name='inventaireglobalhistory_ftth', if_exists='append', index=False)
+    #print('----------------------res envoye----------------------')
+    #print(df)
+    return df
+    #print(res)
+    #for 
+    #return res
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # fonction DeleteProfilUser
 def DeleteProfilUser(userId):
     url = URI_USER + '/' + userId + '/role-mappings/realm'
@@ -1382,6 +1439,9 @@ def get_info_user(userId):
 def test_git():
     return testGit()
 
-    
+#create_table_inventaire_history()
+HistoryInventary()
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

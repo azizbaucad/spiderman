@@ -14,10 +14,14 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as y
     cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
 
 # function de connection à la BDD
+
+
 def connect():
     return psycopg2.connect(database=cfg["NAME_DB"], user=cfg["USER_DB"], password=cfg["PASSWORD_DB"], host=cfg["HOST_DB"], port=cfg["PORT_DB"])
 
 # function de decodage du token avec JWT
+
+
 def decodeToken(token):
     try:
         decoded = jwt.decode(token, options={"verify_signature": False})
@@ -27,6 +31,8 @@ def decodeToken(token):
 
 # function getRoleToken pour l'attribution des roles
 # function getRoleToken pour l'attribution des roles
+
+
 def getRoleToken(token):
     try:
         roles = decodeToken(token)['data']['realm_access']['roles']
@@ -38,12 +44,16 @@ def getRoleToken(token):
         return {'status': 'Error', 'error': ValueError}
 
 # La fonction getIpAdress()
+
+
 def getIpAdress():
     h_name = socket.gethostname()
     IP_addres = socket.gethostbyname(h_name)
     return IP_addres
 
 # La fonction log_app()
+
+
 def log_app(message):
     file_formatter = logging.Formatter(
         "{'time':'%(asctime)s', 'service.name': 'Diag_Distant', 'level': '%(levelname)s', 'message': " + str(
@@ -61,6 +71,8 @@ def log_app(message):
     logger.setLevel(logging.INFO)
 
 # La fonction getAllDoublon
+
+
 def getAllDoublon():
     con = connect()
     query = ''' 
@@ -76,6 +88,8 @@ def getAllDoublon():
     return res
 
 # La fonction affichage des dernieres heure de coupure
+
+
 def getDerniereHeureDeCoupure():
 
     con = connect()
@@ -86,6 +100,34 @@ def getDerniereHeureDeCoupure():
     print(data_)
     res = data_.to_dict(orient='records')
     return res
+
+# Creation de la table history ftth
+
+
+def create_table_inventaire_history():
+    con = connect()
+    cursor = con.cursor()
+    try:
+        create_table_query = ''' CREATE TABLE IF NOT EXISTS inventaireglobalhistory_ftth 
+                     (
+                        id serial PRIMARY KEY,
+                        pon int NOT NULL, 
+                        slot int NOT NULL,
+                        nom_olt varchar(100) NOT NULL,
+                        nombre_de_numero int NOT NULL,
+                        created_at TIMESTAMP DEFAULT Now()
+                     ); '''
+        
+        cursor.execute(create_table_query)
+        con.commit()
+        print(" Table create_table_inventaire_history successfully in PostgreSQL ")
+    except (Exception, Error) as error:
+        print("Error while connecting to PostgreSQL", error)
+    finally:
+        if con:
+            cursor.close()
+            con.close()
+
 
 def testGit():
     return "ceci est un test"
