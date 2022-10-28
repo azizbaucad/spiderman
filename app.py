@@ -1378,6 +1378,10 @@ def get_info_user(userId):
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
+@app.route('/testgit')
+def test_git():
+    return testGit()
 
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

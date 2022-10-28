@@ -86,3 +86,6 @@ def getDerniereHeureDeCoupure():
     print(data_)
     res = data_.to_dict(orient='records')
     return res
+
+def testGit():
+    return "ceci est un test"
