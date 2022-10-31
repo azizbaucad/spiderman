@@ -1356,23 +1356,7 @@ def HistoryInventary():
     #print(res)
     #for 
     #return res
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 # fonction DeleteProfilUser
 def DeleteProfilUser(userId):
@@ -1437,10 +1421,10 @@ def get_info_user(userId):
 
 @app.route('/testgit')
 def test_git():
-    return testGit()
+    return testQuery()
 
-#create_table_inventaire_history()
-HistoryInventary()
+#create_table_inventaire_history() # appel de la fonction
+#HistoryInventary()  # appel de la
 
 
 if __name__ == '__main__':

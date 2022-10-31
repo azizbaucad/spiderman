@@ -13,11 +13,14 @@ import pandas as pd
 with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as ymlfile:
     cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
 
+
 # function de connection à la BDD
 
 
 def connect():
-    return psycopg2.connect(database=cfg["NAME_DB"], user=cfg["USER_DB"], password=cfg["PASSWORD_DB"], host=cfg["HOST_DB"], port=cfg["PORT_DB"])
+    return psycopg2.connect(database=cfg["NAME_DB"], user=cfg["USER_DB"], password=cfg["PASSWORD_DB"],
+                            host=cfg["HOST_DB"], port=cfg["PORT_DB"])
+
 
 # function de decodage du token avec JWT
 
@@ -28,6 +31,7 @@ def decodeToken(token):
         return {"data": decoded, 'code': HTTPStatus.OK}
     except:
         return {"message": "invalid token ", 'code': HTTPStatus.UNAUTHORIZED}
+
 
 # function getRoleToken pour l'attribution des roles
 # function getRoleToken pour l'attribution des roles
@@ -43,6 +47,7 @@ def getRoleToken(token):
     except ValueError:
         return {'status': 'Error', 'error': ValueError}
 
+
 # La fonction getIpAdress()
 
 
@@ -50,6 +55,7 @@ def getIpAdress():
     h_name = socket.gethostname()
     IP_addres = socket.gethostbyname(h_name)
     return IP_addres
+
 
 # La fonction log_app()
 
@@ -70,6 +76,7 @@ def log_app(message):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
+
 # La fonction getAllDoublon
 
 
@@ -87,11 +94,11 @@ def getAllDoublon():
     res = data_.to_dict(orient='records')
     return res
 
+
 # La fonction affichage des dernieres heure de coupure
 
 
 def getDerniereHeureDeCoupure():
-
     con = connect()
     query = ''' Select numero,nom_olt, ip, vendeur, anomalie, criticite, Max(created_at) as created_at  
                 from maintenance_predictive_ftth Group by numero,nom_olt, ip, vendeur, anomalie, criticite
@@ -100,6 +107,7 @@ def getDerniereHeureDeCoupure():
     print(data_)
     res = data_.to_dict(orient='records')
     return res
+
 
 # Creation de la table history ftth
 
@@ -117,7 +125,7 @@ def create_table_inventaire_history():
                         nombre_de_numero int NOT NULL,
                         created_at TIMESTAMP DEFAULT Now()
                      ); '''
-        
+
         cursor.execute(create_table_query)
         con.commit()
         print(" Table create_table_inventaire_history successfully in PostgreSQL ")
@@ -129,5 +137,44 @@ def create_table_inventaire_history():
             con.close()
 
 
+# la fonction data_inventaire
+
+
+def data_inventaire(numero):
+    cnx = connect()
+    df = pd.read_sql_query(
+        '''SELECT ont_index, ont_id, service_id, ip_olt, slot, pon, pon_index, vendeur, nom_olt FROM inventaireglobal_ftth WHERE service_id = '{}' '''.format(
+            numero), con=cnx)
+    df = df.set_axis(
+        ['ont_index', 'ont_id', 'serviceId', 'ip_olt', 'slot', 'pon', 'ponIndex', 'vendeur', 'nomOlt'], axis=1,
+        inplace=False
+    )
+    return df
+
+
+# la fonction data_infos_huawei_conf
+def data_infos_huawei_conf(ip, pon, slot):
+    cnx = connect()
+    df = pd.read_sql_query(
+        '''SELECT ip, index, onu_id, pon, slot, shelf, vlan, nom_traf_down, nom_traf_up FROM infos_huawei_conf_ftth WHERE ip = '{}' AND pon = '{}' AND slot = '{}' '''.format(
+            ip, pon, slot
+        ), con=cnx)
+
+    df=df.set_axis(
+        ['ip', 'index', 'onuId', 'pon', 'slot', 'shelf', 'vlan', 'nomTrafDown', 'nomTrafUp'], axis=1, inplace=False
+    )
+    return df
+
+
+def testQuery():
+    cnx = connect()
+    df = pd.read_sql_query(''' Select * from inventaireglobal_ftth limit 10 ''', con=cnx)
+    print(df)
+    res = df.to_dict(orient='records')
+    return res
+    # return df
+
+
 def testGit():
-    return "ceci est un test"
+    name = cfg['NAME_DB']
+    return f"vous etes connecté à la base {name}"
