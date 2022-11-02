@@ -1,5 +1,5 @@
 import os
-
+from flask import request
 import jwt
 import yaml
 import logging
@@ -9,6 +9,8 @@ import socket
 from psycopg2 import Error
 import psycopg2
 import pandas as pd
+
+# import request
 
 with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as ymlfile:
     cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
@@ -137,6 +139,35 @@ def create_table_inventaire_history():
             con.close()
 
 
+def create_table_debit_history():
+    con = connect()
+    cursor = con.cursor()
+    try:
+        create_table_query = ''' CREATE TABLE IF NOT EXISTS inventaireglobal_network_history 
+                     (
+                        debit_index serial PRIMARY KEY,
+                        service_id varchar(100) NOT NULL, 
+                        offre varchar(100) NOT NULL, 
+                        debit_up int NOT NULL,
+                        debit_down int NOT NULL,
+                        ip_olt varchar(100) NOT NULL,
+                        nom_olt varchar(100) NOT NULL,
+                        slot int NOT NULL,
+                        pon int NOT NULL,
+                        created_at TIMESTAMP DEFAULT Now()
+                     ); '''
+
+        cursor.execute(create_table_query)
+        con.commit()
+        print(" Table create_table_inventaire_history successfully in PostgreSQL ")
+    except (Exception, Error) as error:
+        print("Error while connecting to PostgreSQL", error)
+    finally:
+        if con:
+            cursor.close()
+            con.close()
+
+
 # la fonction data_inventaire
 
 
@@ -160,7 +191,7 @@ def data_infos_huawei_conf(ip, pon, slot):
             ip, pon, slot
         ), con=cnx)
 
-    df=df.set_axis(
+    df = df.set_axis(
         ['ip', 'index', 'onuId', 'pon', 'slot', 'shelf', 'vlan', 'nomTrafDown', 'nomTrafUp'], axis=1, inplace=False
     )
     return df
@@ -173,6 +204,31 @@ def testQuery():
     res = df.to_dict(orient='records')
     return res
     # return df
+
+
+def testHistory():
+    cnx = connect()
+    numero = request.args.get('numero')
+    if numero is not None and numero != "":
+
+        # TODO : mettre les restrictions
+        df = pd.read_sql_query(''' select Distinct service_id, offre, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
+    from inventaireglobal_network where service_id = '{}' '''.format(numero), con=cnx)
+        print(df)
+        res = df.to_dict(orient='records')
+        return res
+
+    else:
+        res = testHistoryDefault()
+        return res
+
+def testHistoryDefault():
+    cnx = connect()
+    query = ''' select Distinct service_id, offre, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
+from inventaireglobal_network '''
+    df_ = pd.read_sql(query, cnx)
+    ret_ = df_.to_dict(orient='records')
+    return ret_
 
 
 def testGit():

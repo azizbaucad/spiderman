@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify, Config
-#from psycopg2 import cursor
+# from psycopg2 import cursor
 from script.function import *
 from script.function_post import *
-from script.confClientsHuawei import *
+
 import yact
 import requests
 import flask
@@ -353,6 +353,12 @@ def tauxOccupation():
         return res
     else:
         return "Veullez saisir une date"
+
+
+# API de l'historissation du taux d'occupation
+@app.route('/testgitt')
+def HistoriqueTauxOccupation():
+    return testQuery()
 
 
 # Test de la fonction d'activation
@@ -993,8 +999,7 @@ def EnableDisableUser(userId):
                     print('ok')
                     messageLogging = name + " a activé l'utilisateur " + GetUserByID(userId)['data']['username']
 
-
-                message_log={
+                message_log = {
                     "url.path": request.base_url,
                     "http.request.method": request.method,
                     "client.ip": getIpAdress(),
@@ -1011,6 +1016,7 @@ def EnableDisableUser(userId):
 
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
+
 
 # API permettant de supprimer un utilisateur
 @app.route('/users/<string:userId>/', methods=['DELETE'])
@@ -1037,7 +1043,8 @@ def DeleteUser(userId):
         code = data_token['code']
         name = data_token['data']['name']
         if code == 200:
-            if getRoleToken(token) == 'admin' or getRoleToken(token) == 'sf': # sf n'est pas autorisé seull admin doit pouvoir faire cette demande
+            if getRoleToken(token) == 'admin' or getRoleToken(
+                    token) == 'sf':  # sf n'est pas autorisé seull admin doit pouvoir faire cette demande
 
                 url = URI_USER + '/' + userId
                 donnee = testGetTokenUserAdmin()
@@ -1058,7 +1065,8 @@ def DeleteUser(userId):
                 }
                 log_app(message_log)
 
-                response = jsonify({'status': 'Success', 'data': 'Utilisateur supprimé avec success', 'code': HTTPStatus.OK})
+                response = jsonify(
+                    {'status': 'Success', 'data': 'Utilisateur supprimé avec success', 'code': HTTPStatus.OK})
 
                 return add_headers(response)
             messageLogging = name + " a tenté de supprimer l'utilisateur " + GetUserByID(userId)['data']['username']
@@ -1075,6 +1083,7 @@ def DeleteUser(userId):
             return decodeToken(token)
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
+
 
 # API permettant de visualiser les profils des utilisateurs
 @app.route('/profils/', methods=['GET'])
@@ -1147,6 +1156,7 @@ def AllProfils():
             return decodeToken(token)
     except ValueError:
         return jsonify({'status': 'Error ', 'error': ValueError})
+
 
 # API permettant de creer le profil d'un utilisateur
 @app.route('/profils/', methods=['POST'])
@@ -1237,7 +1247,7 @@ def UserRole(userId):
                 body = request.get_json()
                 result = {
                     "name": body["name"],
-                    #"id": body["id"],
+                    # "id": body["id"],
                 }
                 print('------------ le res renvoye est----------')
                 print(result)
@@ -1251,7 +1261,7 @@ def UserRole(userId):
                     return {"message": "Erreur", 'status': response.json(), 'code': response.status_code}
                 response = jsonify({'status': 'Success', 'data': 'Profil attribue avec success', 'code': HTTPStatus.OK})
                 messageLogging = name + " a modifie le profil " + body["old_profil"] + " de l'utilisateur " + \
-                                  GetUserByID(userId)['data']['username'] + ' en profil ' + body['name']
+                                 GetUserByID(userId)['data']['username'] + ' en profil ' + body['name']
 
                 message_log = {
                     "url.path": request.base_url,
@@ -1280,6 +1290,7 @@ def UserRole(userId):
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
+
 # API permettant de se déconnecter
 @app.route('/logout/', methods=['GET'])
 def logout():
@@ -1303,7 +1314,7 @@ def logout():
         name = data['data']['name']
         if code == 200:
 
-            messageLogging = name  +  " s'est deconnecté "
+            messageLogging = name + " s'est deconnecté "
             message_log = {
                 "url.path": request.base_url,
                 "http.request.method": request.method,
@@ -1320,6 +1331,7 @@ def logout():
     except ValueError:
         return jsonify({'status': 'Error ', 'error': ValueError})
 
+
 # API permettant de faire l'historisation
 @app.route('/historiqueinventaire', methods=['GET'])
 def HistoryInventary():
@@ -1331,42 +1343,43 @@ def HistoryInventary():
             '''
     data_ = pd.read_sql(query, con)
     print('------------------Le dataFrame renvoyé est------------------------')
-    #print(data_)
+    # print(data_)
     my_dict = data_.to_dict(orient='records')
     df = pd.DataFrame(data=my_dict)
-    i=0
+    i = 0
     for row in df.itertuples():
-        #print(row)
+        # print(row)
         cursor.execute(
             ''' 
                 INSERT INTO inventaireglobalhistory_ftth (pon, slot, nom_olt, nombre_de_numero)
                                                          VALUES (%s, %s, %s, %s)  ''',
-                                                        (row.pon, row.slot, row.nom_olt, row.nombredenumero),        
+            (row.pon, row.slot, row.nom_olt, row.nombredenumero),
         )
         con.commit()
         print(i)
         i = i + 1
         print("Inserted is running ..........................")
     print("Inserted")
-    #print(row.pon)
-    #print('----------------remplissage de la table-------------------')
-    #df.to_sql(con=connect, name='inventaireglobalhistory_ftth', if_exists='append', index=False)
-    #print('----------------------res envoye----------------------')
-    #print(df)
+    # print(row.pon)
+    # print('----------------remplissage de la table-------------------')
+    # df.to_sql(con=connect, name='inventaireglobalhistory_ftth', if_exists='append', index=False)
+    # print('----------------------res envoye----------------------')
+    # print(df)
     return df
-    #print(res)
-    #for 
-    #return res
- 
+    # print(res)
+    # for
+    # return res
+
 
 # fonction DeleteProfilUser
 def DeleteProfilUser(userId):
     url = URI_USER + '/' + userId + '/role-mappings/realm'
     donnee = testGetTokenUserAdmin()
     token_admin = donnee['tokens']["access_token"]
-    response = requests.get(url, headers={'Authorization': 'Bearer {}' .format(token_admin)})
+    response = requests.get(url, headers={'Authorization': 'Bearer {}'.format(token_admin)})
     for role in response.json():
-        if (role.get('name') != 'offline_access' and role.get('name') != 'default-roles-saytu_realm' and role.get('name') != 'uma_authorization'):
+        if (role.get('name') != 'offline_access' and role.get('name') != 'default-roles-saytu_realm' and role.get(
+                'name') != 'uma_authorization'):
             result = {
                 "name": role.get('name'),
                 "id": role.get('id'),
@@ -1420,13 +1433,19 @@ def get_info_user(userId):
     except ValueError:
         return jsonify({'status': 'Error', 'error': ValueError})
 
+
 @app.route('/testgit')
 def test_git():
     return testQuery()
 
-#create_table_inventaire_history() # appel de la fonction
-#HistoryInventary()  # appel de la
-configurationClientsHuawei("338234209")
+@app.route('/testhistory')
+def test_history():
+    return testHistory()
+
+
+# create_table_inventaire_history() # appel de la fonction
+# HistoryInventary()  # appel de la
+# configurationClientsHuawei("338234209")
 
 
 if __name__ == '__main__':
