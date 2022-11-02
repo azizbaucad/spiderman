@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, Config
 #from psycopg2 import cursor
 from script.function import *
 from script.function_post import *
+from script.confClientsHuawei import *
 import yact
 import requests
 import flask
@@ -1425,6 +1426,7 @@ def test_git():
 
 #create_table_inventaire_history() # appel de la fonction
 #HistoryInventary()  # appel de la
+configurationClientsHuawei("338234209")
 
 
 if __name__ == '__main__':
