@@ -1438,7 +1438,7 @@ def get_info_user(userId):
 def test_git():
     return testQuery()
 
-@app.route('/testhistory')
+@app.route('/historiquedebit')
 def test_history():
     return testHistory()
 
