@@ -19,9 +19,6 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as y
 # function de connection à la BDD
 
 
-def connect():
-    return psycopg2.connect(database=cfg["NAME_DB"], user=cfg["USER_DB"], password=cfg["PASSWORD_DB"],
-                            host=cfg["HOST_DB"], port=cfg["PORT_DB"])
 
 
 # function de decodage du token avec JWT

@@ -2,7 +2,9 @@ from flask import Flask, request, jsonify, Config
 # from psycopg2 import cursor
 from script.function import *
 from script.function_post import *
-
+from script.conf import *
+from script.main_function import *
+from script.account import *
 import yact
 import requests
 import flask
@@ -17,102 +19,22 @@ import jsonpickle
 app = Flask(__name__)
 CORS(app)
 
-
-class YactConfig(Config):
-    def from_yaml(self, config_file, directory=None):
-        config = yact.from_file(config_file, directory=directory)
-        for section in config.sections:
-            self[section.upper()] = config[section]
-
-
-def cfg():
-    with open(os.path.dirname(os.path.abspath(__file__)) + './script/config.yaml', "r") as ymlfile:
-        cfg = yaml.load(ymlfile.read(), Loader=yaml.FullLoader)
-        return cfg
-
-
 # Recuperation des variables
-CLIENT_ID = cfg()['CLIENT_ID']
-CLIENT_SECRET = cfg()['CLIENT_SECRET']
-GRANT_TYPE = cfg()['GRANT_TYPE']
-# HOST = cfg()['CLIENT_ID']
-# PORT = sysEnvOrDefault("PORT", app.config['PORT'])
-URI = cfg()['URI']
-URI_USER = cfg()['URI_USER']
-URI_ROLES = cfg()['URI_ROLES']
-REALM = cfg()['REALM']
-URI_BASE = cfg()['URI_BASE']
-
-print(
-    "CLIENT_ID" + CLIENT_ID + "CLIENT_SECRET" + CLIENT_SECRET + "GRANT_TYPE" + GRANT_TYPE + "URI" + URI + "URI_USER" + URI_USER + "URI_ROLES" + URI_ROLES + "REALM" + REALM + "URI_BASE" + URI_BASE)
-field = "aziz"
-print(f"error() : Field {field} is missing", 400)
-
-
-#  Les fonctions utiles
-def add_headers(response):
-    response.headers.add('Content-Type', 'application/json')
-    response.headers.add('X-Frame-Options', 'SAMEORIGIN')
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS')
-
-    return response
-
-
-# test de AdminToken
-
-# La fonction adminToken
-def adminToken():
-    data = {
-        'grant_type': 'client_credentials',
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET
-    }
-
-    url = URI
-
-    response = requests.post(url, data=data)
-
-    if response.status_code > 200:
-        return {"message": "Username ou Password Incorrect", 'status': 'error'}
-    tokens_data = response.json()
-    ret = {
-        'tokens': {"access_token": tokens_data['access_token'],
-                   "token_type": tokens_data['token_type'],
-                   },
-        "status": 'success',
-    }
-    return ret
-
-
-# la fonction error
-
-def error(message):
-    return jsonify({
-        'success': False,
-        'message': message
-    })
-
+# TODO : doit inclure le host et le port
+CLIENT_ID = configuration()['CLIENT_ID']
+CLIENT_SECRET = configuration()['CLIENT_SECRET']
+GRANT_TYPE = configuration()['GRANT_TYPE']
+URI = configuration()['URI']
+URI_USER = configuration()['URI_USER']
+URI_ROLES = configuration()['URI_ROLES']
+REALM = configuration()['REALM']
+URI_BASE = configuration()['URI_BASE']
 
 # simple inventaire info
 @app.route('/simpleinventaire')
 def simpleinventaire():
-    # data = []
-    con = None
-    try:
-        con = connect()
-        cur = con.cursor()
-        cur.execute("SElect * from historique_diagnostic limit 4 ;")
-        data = cur.fetchall()
-        cur.close()
-        con.commit()
-        # return jsonpickle.encode(data)
-    except(Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if con is not None:
-            con.close()
-    return data
+    return simple_inventaire()
+
 
 
 # requete historique/date
