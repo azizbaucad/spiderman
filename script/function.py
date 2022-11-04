@@ -9,6 +9,7 @@ import socket
 from psycopg2 import Error
 import psycopg2
 import pandas as pd
+from script.conf import connect
 
 # import request
 
@@ -17,8 +18,6 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '/config.yaml', "r") as y
 
 
 # function de connection à la BDD
-
-
 
 
 # function de decodage du token avec JWT
@@ -210,7 +209,7 @@ def testHistory():
 
         # TODO : mettre les restrictions
         df = pd.read_sql_query(''' select Distinct service_id, offre, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
-    from inventaireglobal_network where service_id = '{}' '''.format(numero), con=cnx)
+    from inventaireglobal_network_bis where service_id = '{}' '''.format(numero), con=cnx)
         print(df)
         res = df.to_dict(orient='records')
         return res
@@ -219,10 +218,11 @@ def testHistory():
         res = testHistoryDefault()
         return res
 
+
 def testHistoryDefault():
     cnx = connect()
     query = ''' select Distinct service_id, offre, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
-from inventaireglobal_network '''
+from inventaireglobal_network_bis '''
     df_ = pd.read_sql(query, cnx)
     ret_ = df_.to_dict(orient='records')
     return ret_

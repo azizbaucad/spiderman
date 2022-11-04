@@ -1,7 +1,7 @@
 import os
 import yact
 import yaml
-from flask import Config, jsonify
+from flask import Config, jsonify, request
 import psycopg2
 import pandas as pd
 
@@ -52,6 +52,27 @@ def select_query(query):
         if con is not None:
             con.close()
     return data
+
+def select_query_two(query, argument=None):
+    con = None
+    numero = request.args.get(argument)
+    where_clause = f'{str(argument)}'
+    if argument is None:
+        try:
+            con = connect()
+            df = pd.read_sql(query, con)
+            data = df.to_dict(orient='records')
+            con.commit()
+        except(Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if con is not None:
+                con.close()
+        return data
+    else:
+        query_sql = ''''''
+
+
 
 NAME_DB = configuration()["NAME_DB"]
 USER_DB = configuration()["USER_DB"]
