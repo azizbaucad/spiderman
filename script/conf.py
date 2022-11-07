@@ -70,7 +70,7 @@ def select_query_argument(query, numero=None):
                 con.close()
         return data
     else:
-        return {"message": "Vous devez saisir un numero"}
+        return {"message": "la fonction manque un argument : numero"}
 
 # test des parmas
 # if __name__ == '__main__':

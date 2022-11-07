@@ -35,6 +35,17 @@ def get_coupure():
 	                                         FROM maintenance_predictive_ftth WHERE anomalie LIKE '%Coupure%' AND numero = '{}' ''', numero)
         return data
 
+# Historique du taux d'utilisation
+def taux_utilisation():
+    numero = request.args.get('numero')
+    if numero is None or numero == "":
+        data = select_query('''SELECT DISTINCT service_id, offre,vendeur, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
+                               FROM inventaireglobal_network_bis''')
+        return data
+    else:
+        data = select_query_argument(''' SELECT DISTINCT service_id, offre, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
+                                         FROM inventaireglobal_network_bis where  service_id = '{}' ''', numero)
+        return data
 
 # fonction derniere heure de coupure
 #def get_derniere_heure_coupure():

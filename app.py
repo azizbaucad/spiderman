@@ -43,7 +43,7 @@ def historique():
     return get_historique_by_date()
 
 # Good doublons
-@app.route('/doublontest', methods=['GET'])
+@app.route('/listedoublons', methods=['GET'])
 def GetDoublon():
     return get_doublon()
 
@@ -51,6 +51,11 @@ def GetDoublon():
 @app.route('/listecoupures', methods=['GET'])
 def GetCoupure():
     return get_coupure()
+
+# Historique du taux d'utilisation
+@app.route('/historiquetauxutilisation', methods=['GET'])
+def TauxUtilisation():
+    return taux_utilisation()
 
 
 
@@ -215,7 +220,7 @@ def get_Date_Diff():
 
 
 # La fonction qui retourne les numeros en doublon
-@app.route('/doublons', methods=['GET'])
+@app.route('/doublonstest', methods=['GET'])
 def getDoublon():
     if request.method == 'GET':
 
