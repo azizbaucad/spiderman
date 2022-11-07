@@ -4,10 +4,10 @@ HOST: 0.0.0.0
 PORT: 5000
 
 #DATABASE
-NAME_DB: db_diagnostic_distant
-USER_DB: souxateuserprod
-PASSWORD_DB: S0ux@t3Pr0d2021
-HOST_DB: 10.137.15.70
+NAME_DB: db_diagnostic_distant #Saytu_test #
+USER_DB: souxateuserprod #postgres #
+PASSWORD_DB: S0ux@t3Pr0d2021 #Aziz_2030 #
+HOST_DB: 10.137.15.70 #localhost #
 PORT_DB: 5432
 
 #INTEGRATION DE KEYCLOACK

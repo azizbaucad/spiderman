@@ -42,6 +42,17 @@ def simpleinventaire():
 def historique():
     return get_historique_by_date()
 
+# Good doublons
+@app.route('/doublontest', methods=['GET'])
+def GetDoublon():
+    return get_doublon()
+
+# Liste des coupures
+@app.route('/listecoupures', methods=['GET'])
+def GetCoupure():
+    return get_coupure()
+
+
 
 # return historique
 @app.route('/get_historique', methods=['GET', 'POST'])
@@ -200,6 +211,7 @@ def get_Date_Diff():
     return res
 
     # return 'From Date is'+request.args.get('from_date') + ' To Date is ' + request.args.get('to_date')
+
 
 
 # La fonction qui retourne les numeros en doublon

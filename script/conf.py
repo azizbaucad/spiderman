@@ -53,14 +53,14 @@ def select_query(query):
             con.close()
     return data
 
-def select_query_two(query, argument=None):
+def select_query_argument(query, numero=None):
     con = None
-    numero = request.args.get(argument)
-    where_clause = f'{str(argument)}'
-    if argument is None:
+    #numero = request.args.get('numero')
+    #where_clause = f'{str(argument)}'
+    if numero is not None or numero == "":
         try:
             con = connect()
-            df = pd.read_sql(query, con)
+            df = pd.read_sql(query.format(numero), con)
             data = df.to_dict(orient='records')
             con.commit()
         except(Exception, psycopg2.DatabaseError) as error:
@@ -70,8 +70,26 @@ def select_query_two(query, argument=None):
                 con.close()
         return data
     else:
-        query_sql = ''''''
+        return {"message": "Vous devez saisir un numero"}
 
+# test des parmas
+# if __name__ == '__main__':
+#     print("-----------------test mes codes-----------------------")
+#     def testclearg(query, *args):
+#         print(".....The query is....................\n")
+#         print(query)
+#         print("\n ........ The arguments is .........")
+#         for i in args:
+#             print(i)
+#
+#
+#     a1 = "Bob"
+#     a2 = [1, 2, 3]
+#     a3 = {'a': 222, 'b': 333, 'c': 444}
+#     testclearg("Select * from Something", a1, a2, a3)
+
+
+    #testclearg(a1, a2, a3, param1=True, param2=12, param3=None)
 
 
 NAME_DB = configuration()["NAME_DB"]
