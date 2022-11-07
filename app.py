@@ -57,7 +57,10 @@ def GetCoupure():
 def TauxUtilisation():
     return taux_utilisation()
 
-
+# Historique des coupures
+@app.route('/historiquecoupures', methods=['GET'])
+def GetHistoriqueCoupure():
+    return get_historique_coupure()
 
 # return historique
 @app.route('/get_historique', methods=['GET', 'POST'])

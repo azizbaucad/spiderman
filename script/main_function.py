@@ -1,6 +1,7 @@
 import psycopg2
 from script.conf import *
 import pandas as pd
+from datetime import datetime
 
 
 def simple_inventaire():
@@ -25,15 +26,18 @@ def get_doublon():
                                            and db.service_id = '{}'  order by db.created_at::date desc''', numero)
         return data
 
+
 # Liste des coupures
 def get_coupure():
     numero = request.args.get('numero')
     if numero is None or numero == "":
-         return "La liste des coupures est vide"
+        return "La liste des coupures est vide"
     else:
         data = select_query_argument('''SELECT numero,pon , slot, ip, nom_olt, vendeur, anomalie, criticite,   created_at  
-	                                         FROM maintenance_predictive_ftth WHERE anomalie LIKE '%Coupure%' AND numero = '{}' ''', numero)
+	                                         FROM maintenance_predictive_ftth WHERE anomalie LIKE '%Coupure%' AND numero = '{}' ''',
+                                     numero)
         return data
+
 
 # Historique du taux d'utilisation
 def taux_utilisation():
@@ -41,12 +45,54 @@ def taux_utilisation():
     if numero is None or numero == "":
         data = select_query('''SELECT DISTINCT service_id, offre,vendeur, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
                                FROM inventaireglobal_network_bis''')
+
+        df = pd.DataFrame(data)
+        i = 0
+        for row in df.itertuples():
+            #print(row.offre)
+            if row.offre == "FIBRE BI":
+                debitMoySouscrit = "20 MB"
+                #print(row.offre + "::" + debitMoySouscrit)
+            elif row.offre == "FIBRE MAX":
+                debitMoySouscrit = "40 MB"
+                #print(row.offre + "::" + debitMoySouscrit)
+            elif row.offre == "FIBRE MEGA":
+                debitMoySouscrit = "60 MB"
+                #print(row.offre + "::" + debitMoySouscrit)
+            else:
+                debitMoySouscrit = "100 MB"
+                #print(row.offre + "::" + debitMoySouscrit)
+
+            print(row.service_id + "::" + row.offre + "::" + debitMoySouscrit)
+            data_ = {"service_id": row.service_id, "offre": row.offre, "DebitMoy":debitMoySouscrit}
+            #return datawithdebitsouscrit
+            #return data_
+
+
         return data
+        #return datawithdebitsouscrit
+        #return data_
     else:
         data = select_query_argument(''' SELECT DISTINCT service_id, offre, debitup, debitdown, ip_olt,nom_olt,slot,pon,  created_at::date
                                          FROM inventaireglobal_network_bis where  service_id = '{}' ''', numero)
         return data
+# Fonction Historique des coupures sur x jours ou x mois
+
+def get_historique_coupure():
+    dateDebut = request.args.get('dateDebut')
+    dateFin = request.args.get('dateFin')
+    dateDebut = datetime.strptime(dateDebut, '%Y-%m-%d')
+    dateFin = datetime.strptime(dateFin, '%Y-%m-%d')
+    dateDebut = dateDebut.date()
+    dateFin = dateFin.date()
+    duree = dateFin - dateDebut
+    duree = duree.days
+
+    if dateDebut is not None and dateFin is not None:
+        data = select_query_date_between('''Select numero, ip, anomalie, nom_olt,  count(numero) as Dureee FROM maintenance_predictive_ftth WHERE date BETWEEN '{}'  AND  '{}' GROUP BY numero, ip, anomalie, nom_olt HAVING COUNT(numero) = {} ''', dateDebut, dateFin, duree)
+        return data
+    else:
+        return "Veuillez saisir les dates"
 
 # fonction derniere heure de coupure
-#def get_derniere_heure_coupure():
-
+# def get_derniere_heure_coupure():

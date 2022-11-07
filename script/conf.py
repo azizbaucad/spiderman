@@ -72,6 +72,26 @@ def select_query_argument(query, numero=None):
     else:
         return {"message": "la fonction manque un argument : numero"}
 
+# fonction select avec plusieurs arguments
+def select_query_date_between(query, arg1=None, arg2=None, arg3=None):
+    if arg1 is not None or arg1 == "" or arg2 is not None or arg2 == "":
+        try:
+            #duree = arg2 - arg1
+            con = connect()
+            df = pd.read_sql(query.format(arg1, arg2, arg3), con)
+            data = df.to_dict(orient='records')
+            con.commit()
+        except(Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if con is not None:
+                con.close()
+        return data
+    else:
+        return {"Error": "Verifier les arguments entrées !!!"}
+
+
+
 # test des parmas
 # if __name__ == '__main__':
 #     print("-----------------test mes codes-----------------------")
