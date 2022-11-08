@@ -52,10 +52,11 @@ def GetDoublon():
 def GetCoupure():
     return get_coupure()
 
-# Historique du taux d'utilisation
+
+# Historique Taux d'utilisation du débit
 @app.route('/historiquetauxutilisation', methods=['GET'])
-def TauxUtilisation():
-    return taux_utilisation()
+def TauxUtilisationDebit():
+    return taux_utilisation_debit()
 
 # Historique des coupures
 @app.route('/historiquecoupures', methods=['GET'])
